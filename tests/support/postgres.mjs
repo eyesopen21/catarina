@@ -2,6 +2,19 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 
 export const POSTGRES_IMAGE = 'postgres:17.5-alpine';
+export const POSTGRES_URL_ENV = 'CATARINA_TEST_PG_URL';
+const externalUrl = process.env[POSTGRES_URL_ENV] || '';
+
+// Two ways to reach a REAL PostgreSQL 17 server: a container started by this
+// harness (local Docker with a Linux daemon), or a CI service container reached
+// through a libpq URL. There is no mock, SQLite or in-memory fallback.
+export const POSTGRES_TARGET = Object.freeze({
+  mode: externalUrl ? 'ci-service' : 'managed-container',
+  image: POSTGRES_IMAGE,
+  urlEnv: POSTGRES_URL_ENV,
+  managed: !externalUrl,
+});
+
 const containerName = `catarina-test-${randomUUID().slice(0, 8)}`;
 let started = false;
 
@@ -22,9 +35,11 @@ function run(command, args, options = {}) {
 
 export async function startPostgres() {
   if (started) return;
-  await run('docker', ['run', '--detach', '--rm', '--name', containerName,
-    '--publish', '127.0.0.1::5432', '--env', 'POSTGRES_HOST_AUTH_METHOD=trust',
-    POSTGRES_IMAGE]);
+  if (!externalUrl) {
+    await run('docker', ['run', '--detach', '--rm', '--name', containerName,
+      '--publish', '127.0.0.1::5432', '--env', 'POSTGRES_HOST_AUTH_METHOD=trust',
+      POSTGRES_IMAGE]);
+  }
   started = true;
 
   const deadline = Date.now() + 45_000;
@@ -41,6 +56,13 @@ export async function startPostgres() {
 }
 
 export async function psql(sql, { database = 'postgres' } = {}) {
+  if (externalUrl) {
+    // A short-lived client container on the host network reaches the CI
+    // service. Every invocation is its own process and PostgreSQL session.
+    return run('docker', ['run', '--rm', '--network', 'host', POSTGRES_IMAGE,
+      'psql', externalUrl, '-X', '--set', 'ON_ERROR_STOP=1', '--tuples-only',
+      '--no-align', '--command', sql]);
+  }
   return run('docker', ['exec', '--interactive', containerName, 'psql', '-X',
     '--set', 'ON_ERROR_STOP=1', '--tuples-only', '--no-align', '--username', 'postgres',
     '--dbname', database, '--command', sql]);
@@ -49,7 +71,7 @@ export async function psql(sql, { database = 'postgres' } = {}) {
 export async function stopPostgres() {
   if (!started) return;
   try {
-    await run('docker', ['stop', '--time', '3', containerName]);
+    if (!externalUrl) await run('docker', ['stop', '--time', '3', containerName]);
   } finally {
     started = false;
   }
