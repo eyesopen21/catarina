@@ -3,15 +3,22 @@ import { randomUUID } from 'node:crypto';
 
 export const POSTGRES_IMAGE = 'postgres:17.5-alpine';
 export const POSTGRES_URL_ENV = 'CATARINA_TEST_PG_URL';
+export const PSQL_BIN_ENV = 'CATARINA_TEST_PSQL';
 const externalUrl = process.env[POSTGRES_URL_ENV] || '';
+// Native psql client used when the URL points at an external real server.
+// Defaults to `psql` on PATH; an absolute binary path can be supplied on hosts
+// without a system-wide client (e.g. portable PostgreSQL binaries in temp).
+const externalPsql = process.env[PSQL_BIN_ENV] || 'psql';
 
 // Two ways to reach a REAL PostgreSQL 17 server: a container started by this
-// harness (local Docker with a Linux daemon), or a CI service container reached
-// through a libpq URL. There is no mock, SQLite or in-memory fallback.
+// harness (local Docker with a Linux daemon), or a server reached through a
+// libpq URL using a native psql client. There is no mock, SQLite or in-memory
+// fallback, and external mode never depends on Docker.
 export const POSTGRES_TARGET = Object.freeze({
   mode: externalUrl ? 'ci-service' : 'managed-container',
   image: POSTGRES_IMAGE,
   urlEnv: POSTGRES_URL_ENV,
+  psqlEnv: PSQL_BIN_ENV,
   managed: !externalUrl,
 });
 
@@ -52,16 +59,18 @@ export async function startPostgres() {
     }
   }
   await stopPostgres();
-  throw new Error(`PostgreSQL container ${POSTGRES_IMAGE} did not become ready in 45 seconds`);
+  const target = externalUrl ? `external server (${POSTGRES_URL_ENV})` : `container ${POSTGRES_IMAGE}`;
+  throw new Error(`PostgreSQL ${target} did not become ready in 45 seconds`);
 }
 
 export async function psql(sql, { database = 'postgres' } = {}) {
   if (externalUrl) {
-    // A short-lived client container on the host network reaches the CI
-    // service. Every invocation is its own process and PostgreSQL session.
-    return run('docker', ['run', '--rm', '--network', 'host', POSTGRES_IMAGE,
-      'psql', externalUrl, '-X', '--set', 'ON_ERROR_STOP=1', '--tuples-only',
-      '--no-align', '--command', sql]);
+    // A native psql client connects straight to the real server (CI service
+    // container or any reachable PostgreSQL 17 instance). Every invocation is
+    // its own process and therefore its own PostgreSQL session, which is what
+    // the distinct-pg_backend_pid() barrier assertion relies on.
+    return run(externalPsql, ['-X', '--set', 'ON_ERROR_STOP=1', '--tuples-only',
+      '--no-align', '--dbname', externalUrl, '--command', sql]);
   }
   return run('docker', ['exec', '--interactive', containerName, 'psql', '-X',
     '--set', 'ON_ERROR_STOP=1', '--tuples-only', '--no-align', '--username', 'postgres',

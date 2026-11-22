@@ -32,17 +32,27 @@ tree and **cannot replace** the history scan.
 
 The harness never mocks PostgreSQL. It either starts its own
 `postgres:17.5-alpine` container (`docker run`, loopback-only random port,
-`POSTGRES_HOST_AUTH_METHOD=trust`, removed after the run) or connects to a CI
-service container through `CATARINA_TEST_PG_URL`. Each `psql` call is a
+`POSTGRES_HOST_AUTH_METHOD=trust`, removed after the run) or connects to a real
+server through a libpq URL in `CATARINA_TEST_PG_URL`. In external mode the
+harness uses a **native `psql` client** — `psql` on PATH, or the absolute binary
+path in `CATARINA_TEST_PSQL` — and never invokes Docker. Each `psql` call is a
 separate process and therefore a separate database session; the harness test
 asserts two distinct `pg_backend_pid()` values at a barrier.
 
-Local runs require a Docker Linux daemon. This environment has no Linux engine
-(`npipe:////./pipe/dockerDesktopLinuxEngine` unavailable), so the harness has
-**never actually executed** here: local PostgreSQL evidence is **pendiente de
-CI**, not green. The valid evidence must come from CI on `ubuntu-latest`, which
-provides the Linux daemon and the `postgres:17` service. Do not report the
-database tests as passing until that run exists.
+When `CATARINA_TEST_PG_URL` is unset the Docker Linux daemon is still required.
+It is also possible to run the same real server locally **without Docker**:
+unpack the EDB Windows x64 binaries zip for PostgreSQL 17 into a temp dir,
+`initdb -D <temp>/pgdata -U postgres --auth=trust`, `pg_ctl -D <temp>/pgdata
+-o "-p <free-port> -h 127.0.0.1" start`, `CREATE DATABASE catarina_test`, then
+export `CATARINA_TEST_PG_URL=postgresql://postgres@127.0.0.1:<free-port>/catarina_test`
+and `CATARINA_TEST_PSQL=<temp>/pgsql/bin/psql.exe`. No mock, SQLite or in-memory
+fallback is involved.
+
+Verified locally on 2026-11-22 with EDB portable PostgreSQL 17.5
+(`SELECT version()` → `PostgreSQL 17.5 on x86_64-windows`, `SHOW
+server_version_num` → `170005`): `node --test tests/**/*.test.mjs` →
+`# tests 28 | # pass 28 | # fail 0`. CI on `ubuntu-latest` with the
+`postgres:17` service remains the canonical automated path.
 
 Suggested GitHub Actions service (ephemeral, synthetic data only):
 
@@ -116,6 +126,6 @@ participants. No domain test or domain code lives outside its own WP.
 | TC-SPR-03 | Escáner de secretos sobre working tree | **Verde local**: 0 hallazgos. Ejecución en CI: **pendiente** |
 | TC-SPR-03 | Escaneo de secretos en el historial (Gitleaks, `--all`) | **Cableado en CI** (`phase-f1` @ `81ab364`: Gitleaks 8.30.1 con checksum, `fetch-depth: 0`). **Ejecución real pendiente**: sin push autorizado |
 | TC-SPR-03 | Sandboxes / credenciales reales de staging | **Pendiente** — no aprobado |
-| Harness PostgreSQL | `postgres:17` real + barreras con sesiones independientes | **Pendiente de CI** — sin motor Docker Linux local; nunca ejecutado |
+| Harness PostgreSQL | `postgres:17` real + barreras con sesiones independientes | **Verde local**: PostgreSQL 17.5 portable (EDB, sin Docker), `server_version_num=170005`, 2/2 tests reales; suite completa 28/28. Ejecución en CI: **pendiente** |
 
 Pilot approval is a human gate and is deliberately left open.
