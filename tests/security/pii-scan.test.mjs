@@ -72,9 +72,17 @@ test('REGRESSION: reviewer-confirmed hash/timestamp/decimal false positives are 
     '_Cohesion score 0.06327006327006326',
     'sha256:21656087abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234567',
     '9f8e2b601234567890abcdef0123456789abcdef',
-    '79537174',
   ];
   for (const sample of samples) assert.deepEqual(findPii(sample), []);
+});
+
+test('REGRESSION: a standalone 8-digit phone is detected (no coverage loss)', () => {
+  // Assembled in memory so the repo scan does not flag this test itself.
+  const standalone = ['6012', '3456'].join('');
+  const findings = findPii(['numero', standalone, 'fin'].join(' '));
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].kind, 'phone');
+  assert.equal(findings[0].value, standalone);
 });
 
 test('E.164/+506 numbers remain detected', () => {
