@@ -10,6 +10,9 @@ export const SKIPPED_DIRECTORIES = new Set(['.git', 'node_modules', 'dist', 'tar
 export const TEXT_EXTENSIONS = new Set([
   '.md', '.txt', '.json', '.jsonl', '.yaml', '.yml', '.toml', '.csv', '.log',
   '.ts', '.tsx', '.js', '.mjs', '.cjs', '.rs', '.sql', '.env', '.sh', '.py',
+  // Static web artifacts: the deployed index.html is built from this source.
+  // dist/ stays excluded as generated output; the source HTML is scanned.
+  '.html', '.htm',
 ]);
 
 export function repositoryRoot(importMetaUrl) {

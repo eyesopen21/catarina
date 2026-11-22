@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { findPii, scanPaths } from './pii-scan.mjs';
+import { scanPaths as scanSecrets } from './secret-scan.mjs';
 
 // Canaries are assembled at runtime: no literal PII shape may live in the repo.
 const phone = (a, b, separator = '-') => [a, b].join(separator);
@@ -116,4 +120,26 @@ test('REGRESSION: lockfile deprecated metadata email is ignored, nothing else is
   // and on a deprecated line of a non-lockfile, MUST still be reported.
   assert.equal(findPii(`    resolved: ${email}`, 'pnpm-lock.yaml').length, 1);
   assert.equal(findPii(deprecated, 'README.md').length, 1);
+});
+
+test('REGRESSION: .html and .htm source artifacts are scanned by both scanners', async () => {
+  const tempBase = path.join(os.tmpdir(), 'opencode');
+  await mkdir(tempBase, { recursive: true });
+  const dir = await mkdtemp(path.join(tempBase, 'wp03-html-'));
+  try {
+    const email = ['alumna', 'canary.invalid'].join('@');
+    const phoneNumber = phone('8888', '1111', ' ');
+    const token = ['gh', 'p_'].join('') + 'A'.repeat(36);
+    const markup = `<!doctype html><p>${email} ${phoneNumber} ${token}</p>`;
+    await writeFile(path.join(dir, 'index.html'), markup, 'utf8');
+    await writeFile(path.join(dir, 'legacy.htm'), markup, 'utf8');
+
+    const pii = await scanPaths([dir]);
+    assert.deepEqual(pii.map((finding) => finding.kind).sort(), ['email', 'email', 'phone', 'phone']);
+
+    const secrets = await scanSecrets([dir]);
+    assert.deepEqual(secrets.map((finding) => finding.kind).sort(), ['github-token', 'github-token']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
