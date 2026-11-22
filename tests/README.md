@@ -22,9 +22,11 @@ be fixed by token anchoring, not by hiding findings.
 
 `gitleaks-history.mjs` is the SPR-03 **history** half. It refuses a shallow
 checkout and runs `gitleaks git . --log-opts=--all --redact --exit-code 1`.
-CI must check out with `fetch-depth: 0` (AG-PLT owns the job); Gitleaks itself
-must be installed in the runner. `secret-scan.mjs` covers only the working tree
-and **cannot replace** the history scan.
+It is now **wired into CI in `phase-f1` @ `81ab364`**: the harness job checks out
+with `fetch-depth: 0` and pins Gitleaks 8.30.1 with a checksum. The **real CI
+execution is still pending** because no push is authorized from this worktree;
+"wired" is not the same as "has run". `secret-scan.mjs` covers only the working
+tree and **cannot replace** the history scan.
 
 ## Real PostgreSQL 17 — CI contract for WP-10
 
@@ -112,7 +114,7 @@ participants. No domain test or domain code lives outside its own WP.
 | TC-NFR-PRV-01 | Escáner PII sobre repo, fixtures y logs sintéticos | **Verde local**: 0 hallazgos. Ejecución en CI: **pendiente** |
 | TC-NFR-PRV-01 | Muestras reales de logs/trazas/métricas/embeddings del piloto | **Pendiente** — muestras no disponibles; no aprobado |
 | TC-SPR-03 | Escáner de secretos sobre working tree | **Verde local**: 0 hallazgos. Ejecución en CI: **pendiente** |
-| TC-SPR-03 | Escaneo de secretos en el historial (Gitleaks, `--all`) | **Pendiente de CI** — Gitleaks no instalado localmente; `fetch-depth: 0` requerido |
+| TC-SPR-03 | Escaneo de secretos en el historial (Gitleaks, `--all`) | **Cableado en CI** (`phase-f1` @ `81ab364`: Gitleaks 8.30.1 con checksum, `fetch-depth: 0`). **Ejecución real pendiente**: sin push autorizado |
 | TC-SPR-03 | Sandboxes / credenciales reales de staging | **Pendiente** — no aprobado |
 | Harness PostgreSQL | `postgres:17` real + barreras con sesiones independientes | **Pendiente de CI** — sin motor Docker Linux local; nunca ejecutado |
 
