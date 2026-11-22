@@ -1,13 +1,16 @@
 openapi: 3.1.0
 info:
   title: Plataforma Docente API
-  version: 0.1.0-draft
-  summary: Contrato propuesto (no implementado) de la API REST v1.
+  version: 1.0.0
+  summary: Contrato v1 propuesto (pendiente de gate humano; no implementado).
   description: |
     Contrato de diseño derivado de 02-SRS y 05-Technical-Specifications.
-    Estado: Proposed. Sin PII de menores en ningún ejemplo.
+    Estado: Proposed; contrato no congelado hasta revisión humana. Sin PII de menores en ningún ejemplo.
     Concurrencia optimista con ETag/If-Match, idempotencia con Idempotency-Key,
-    errores application/problem+json (RFC 9457).
+    errores application/problem+json (RFC 9457). Los clientes MUST ignorar campos y
+    valores de enum desconocidos. Cambios incompatibles requieren /v2; las deprecaciones
+    se anuncian con Deprecation y Sunset, al menos seis meses antes, y se registran en
+    el changelog de contratos. Los valores de enum son extensibles.
   license:
     name: Por definir (OD-01)
     identifier: NOASSERTION
@@ -939,6 +942,12 @@ components:
     RetryAfter:
       description: Segundos hasta poder reintentar.
       schema: { type: integer, minimum: 0 }
+    Deprecation:
+      description: Presente en recursos u operaciones obsoletas; anunciar la retirada futura.
+      schema: { type: string }
+    Sunset:
+      description: Fecha HTTP en que el recurso u operación dejará de estar disponible.
+      schema: { type: string }
 
   parameters:
     PlanId:
