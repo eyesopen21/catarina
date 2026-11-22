@@ -16,17 +16,14 @@ const detectors = [
 
 const DATE_LIKE = /^20\d{2}[\s.-]20\d{2}$/;
 
-// Principled token anchoring. A bare contiguous 8-digit run is ambiguous with
-// identifiers, epoch fragments and counters (the graphify-out false positives),
-// so it is only a phone candidate when it carries E.164/+506 or an explicit
-// group separator. Embedded candidates are rejected by isDelimited() in
-// scan-util.mjs. Neither rule narrows the numeric ranges of the detectors.
-function isPiiCandidate(id, value) {
-  if (DATE_LIKE.test(value)) return false;
-  if (id !== 'phone') return true;
-  const hasCountryCode = /^\+?506[\s.-]?/.test(value);
-  const hasGroupSeparator = /[2687]\d{3}[\s.-]\d{4}/.test(value);
-  return hasCountryCode || hasGroupSeparator;
+// The only semantic exclusion is the date guard inherited from the base
+// detector. Token anchoring is done by isDelimited() in scan-util.mjs: digit
+// runs embedded in hashes, timestamps or decimals are rejected there, while a
+// standalone 8-digit phone remains fully detectable. No extra prefix or
+// separator requirement is imposed, so coverage is identical to the base
+// detector (ranges 2/6/7/8 and +506).
+function isPiiCandidate(_id, value) {
+  return !DATE_LIKE.test(value);
 }
 
 export function findPii(text) {

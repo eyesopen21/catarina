@@ -77,11 +77,12 @@ jobs:
       - run: node tests/security/gitleaks-history.mjs
 ```
 
-The PII detector requires `+506`/E.164 or an explicit group separator for
-phones; bare contiguous 8-digit runs are rejected because they are
-indistinguishable from epoch fragments and counters (the graphify-out false
-positives). Embedded candidates are rejected with Unicode-aware `\p{L}\p{N}`
-adjacency checks. Both numeric ranges remain unchanged.
+The PII detector's only token anchor is the Unicode-aware `\p{L}\p{N}`
+adjacency check in `scan-util.mjs`: digit runs embedded in hashes, nanosecond
+timestamps or decimals are rejected, while a standalone 8-digit phone
+delimited by spaces/punctuation is still detected. The only semantic exclusion
+is the date guard inherited from the base detector. Numeric ranges `2/6/7/8`
+and `+506` remain unchanged.
 
 `gitleaks` covers the full history (docs/09 §8); the in-repo secret scanner
 covers the working tree, fixtures and synthetic log samples. Checkout with
