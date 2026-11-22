@@ -1,8 +1,8 @@
 # ADR-013: Stack de aplicación — TypeScript de extremo a extremo frente a TypeScript + Python (FastAPI)
 
-- **Status:** Proposed
+- **Status:** Accepted (solo stack)
 - **Date:** 2026-11-22
-- **Deciders:** pendiente — propietario del producto, según composición del equipo (OD-10)
+- **Deciders:** propietario del producto (decisión de stack, 2026-11-22)
 - **Relacionado:** [05 §3](../05-Technical-Specifications.md) · FR-API-01, NFR-USA-01, NFR-I18N-01
 
 ## Context
@@ -26,14 +26,16 @@ S19 sugiere de forma no prescriptiva frontend TypeScript/React y backend TypeScr
    - Contras: menor afinidad con la mayor parte del ecosistema de SDK de IA y MCP.
 
 ## Decision
-**Propuesta:** opción 1, **condicionada** a la composición del equipo. Si el equipo es principalmente Python, la opción 2 es equivalente para este diseño: ni el dominio ni los contratos cambian. SPA o SSR se decide tras el prototipo del editor.
+**Aceptada por el propietario para el stack:** React y TypeScript en la web; NestJS y TypeScript en la API; núcleo Rust separado detrás de una interfaz explícita. PostgreSQL con RLS, JSONB, pgvector y btree_gist; migraciones por contexto. Monorepo con pnpm workspaces. OpenAPI 3.1, AsyncAPI 3.0 y JSON Schema de `docs/contracts/` son la fuente de contratos y tipos generados. Integración y concurrencia se prueban con PostgreSQL real en contenedor.
+
+La forma de integración con Rust y SPA o SSR se decidirán con evidencia durante la implementación. Equipo, proveedores, versiones, licencias y algoritmo AEAD siguen pendientes; esta aceptación no aprueba otros ADR.
 
 ## Consequences
-- Positivas: un toolchain; tipos desde contratos.
-- Negativas: si se necesita procesamiento de lenguaje en Python (p. ej. detectores DLP), se aísla como componente del worker.
+- Positivas: TypeScript compartido para web y API; límites modulares y tipos derivados de contratos.
+- Negativas: Rust introduce un segundo toolchain y requiere definir y probar su interfaz.
 
 ## Risks
-- Elegir por preferencia y no por el equipo → la decisión espera a OD-10.
+- La composición del equipo sigue pendiente; validar que puede mantener ambos toolchains.
 
 ## Revisit Triggers
-Al confirmar el equipo y tras el prototipo del editor.
+Al confirmar el equipo, definir la interfaz Rust y tras el prototipo del editor.

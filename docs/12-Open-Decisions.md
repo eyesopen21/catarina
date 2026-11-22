@@ -1,7 +1,7 @@
 # 12 — Decisiones abiertas
 
 **Versión:** 0.1-draft · **Estado:** Draft · **Fecha:** 2026-11-22
-**Regla:** ninguna de estas decisiones se resuelve aquí; todas esperan al propietario. Los ADR siguen en `Proposed`.
+**Regla:** las decisiones no indicadas como resueltas esperan al propietario. Solo ADR-013 está aceptado en lo relativo al stack; los demás ADR siguen en `Proposed`.
 
 | ID | Decisión | Afecta | Origen |
 |---|---|---|---|
@@ -14,10 +14,10 @@
 | OD-07 | Documentos exigidos por cada centro (modalidad privada/bilingüe) | BR-04, FR-CUR-06 | S12, S28 |
 | OD-08 | Modelo de negocio público/privado (hipótesis, sin validar) | PRD §8 | S12, S17 |
 | OD-09 | Presupuesto y costo objetivo por planeamiento | NFR-COST-01 | S26, S28 |
-| OD-10 | Equipo, stack, proveedores y verificación en fuentes oficiales de versiones/licencias (incluido algoritmo AEAD) | ADR-002, 006, 007, 013, 022 | ARCH |
+| OD-10 | **Stack resuelto por el propietario:** React y TypeScript en web; NestJS y TypeScript en backend; núcleo Rust separado mediante interfaz explícita; PostgreSQL con RLS, JSONB, pgvector y btree_gist y migraciones por contexto; pnpm workspaces; OpenAPI 3.1, AsyncAPI 3.0 y JSON Schema como fuente de tipos; PostgreSQL real en contenedor para integración y concurrencia. **Pendientes:** composición del equipo, proveedores y verificación de versiones/licencias y algoritmo AEAD. | ADR-002, 006, 007, 013, 022 | ARCH |
 | OD-11 | Diseño y alcance del piloto | 11 §10 | S26 |
 | OD-12 | Discrepancias de la suite: numeración de archivos en `00_COMENZAR_AQUI.md`; `superseded` como estado de versión; ubicación de `Group` (MEM vs contexto Roster) | 03 §3.3, 04 §5 | ARCH |
 | OD-13 | Política sobre contenido generado y licencia del material educativo TEC o similar | S28 | S28 |
 | OD-14 | Alcance de interoperabilidad institucional (LMS/Drive/M365) | EIR-04 | S28 |
-| OD-15 | Aceptar, modificar o rechazar ADR-001 … ADR-023 (todos `Proposed`) | [adr/](adr/README.md) | ARCH |
+| OD-15 | Aceptar, modificar o rechazar los ADR restantes (ADR-013 aceptado solo en cuanto al stack; los demás siguen `Proposed`) | [adr/](adr/README.md) | ARCH |
 | OD-16 | Matriz de egress (clases de dato × nivel de proveedor) y agregación mínima por tamaño de grupo | 07 §9.3, ADR-017 | S22, S23 |
