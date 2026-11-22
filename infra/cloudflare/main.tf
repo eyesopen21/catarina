@@ -35,13 +35,9 @@ resource "cloudflare_workers_script" "api" {
 
   compatibility_date = "2026-11-22T00:00:00Z"
   main_module        = "worker.mjs"
-
-  files = {
-    "worker.mjs" = {
-      content_file = var.worker_bundle_paths[each.key]
-      content_type = "application/javascript+module"
-    }
-  }
+  content_file     = var.worker_bundle_paths[each.key]
+  content_sha256   = filesha256(var.worker_bundle_paths[each.key])
+  content_type     = "application/javascript+module"
 
   bindings = [
     {
