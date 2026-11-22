@@ -11,11 +11,14 @@ test('uses the configured real PostgreSQL server', async () => {
 });
 
 test('barrier releases independent database sessions together', async () => {
-  await psql('CREATE TEMP TABLE IF NOT EXISTS wp03_barrier_probe (id integer PRIMARY KEY)');
+  // No temp table is created: every psql invocation is a separate process and
+  // therefore a separate PostgreSQL session, so a TEMP table would not be
+  // shared. Independence is proven directly by the distinct backend PIDs below.
   const wait = createBarrier(2);
   const sessions = [1, 2].map(async (id) => {
     await wait();
-    // docker exec starts a separate psql process and therefore a separate PostgreSQL session.
+    // docker exec / a short-lived client container starts a separate psql
+    // process and therefore a separate PostgreSQL session.
     return psql(`SELECT pg_backend_pid(), ${id}`);
   });
   const results = await Promise.all(sessions);

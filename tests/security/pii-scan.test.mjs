@@ -48,3 +48,37 @@ test('a standalone synthetic phone number is still detected', () => {
 test('the date guard remains active', () => {
   assert.deepEqual(findPii('periodo 2020-2021'), []);
 });
+
+test('REGRESSION: two phone numbers in one text both reported (global iteration)', () => {
+  const first = phone('8888', '1111', ' ');
+  const second = phone('7777', '2222', ' ');
+  const findings = findPii([first, 'and', second].join(' '));
+  assert.equal(findings.length, 2);
+  assert.deepEqual(findings.map((finding) => finding.value), [first, second]);
+});
+
+test('REGRESSION: two national ids in one text both reported', () => {
+  const first = nationalId('1', '2345', '6789');
+  const second = nationalId('2', '3456', '7890');
+  const findings = findPii([first, 'y', second].join(' '));
+  assert.equal(findings.length, 2);
+  assert.deepEqual(findings.map((finding) => finding.value), [first, second]);
+});
+
+test('REGRESSION: reviewer-confirmed hash/timestamp/decimal false positives are ignored', () => {
+  const samples = [
+    '"graph_mtime_ns": 1795371744764283900',
+    '"mtime": 1795371152.4883711',
+    '_Cohesion score 0.06327006327006326',
+    'sha256:21656087abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234567',
+    '9f8e2b601234567890abcdef0123456789abcdef',
+    '79537174',
+  ];
+  for (const sample of samples) assert.deepEqual(findPii(sample), []);
+});
+
+test('E.164/+506 numbers remain detected', () => {
+  const findings = findPii(['Llamar al', ['+506', phone('8888', '1111', ' ')].join(' ')].join(' '));
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].value, ['+506', phone('8888', '1111', ' ')].join(' '));
+});
