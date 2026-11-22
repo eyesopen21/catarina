@@ -1,0 +1,407 @@
+asyncapi: 3.0.0
+info:
+  title: Plataforma Docente — eventos de dominio
+  version: 0.1.0-draft
+  description: |
+    Eventos publicados desde el transactional outbox (08 §3) con entrega at-least-once.
+    Los consumidores MUST deduplicar por `event_id`. Los payloads no contienen PII:
+    solo identificadores y metadatos. Webhooks firmados con HMAC (05 §10).
+defaultContentType: application/json
+
+servers:
+  webhooks:
+    host: subscriber.example.invalid
+    protocol: https
+    description: Endpoint HTTPS registrado por el suscriptor institucional (Etapa 2).
+
+channels:
+  plan:
+    address: plan.events
+    description: Eventos del contexto Lesson Planning
+    messages:
+      PlanCreated: { $ref: '#/components/messages/PlanCreated' }
+      ExportRequested: { $ref: '#/components/messages/ExportRequested' }
+      PatchProposed: { $ref: '#/components/messages/PatchProposed' }
+      PatchAccepted: { $ref: '#/components/messages/PatchAccepted' }
+      PatchRejected: { $ref: '#/components/messages/PatchRejected' }
+      PatchStale: { $ref: '#/components/messages/PatchStale' }
+      SectionApproved: { $ref: '#/components/messages/SectionApproved' }
+      SectionReopened: { $ref: '#/components/messages/SectionReopened' }
+      PlanStateChanged: { $ref: '#/components/messages/PlanStateChanged' }
+      ReflectionRecorded: { $ref: '#/components/messages/ReflectionRecorded' }
+  document:
+    address: document.events
+    messages:
+      ArtifactVersionCreated: { $ref: '#/components/messages/ArtifactVersionCreated' }
+      ExportCompleted: { $ref: '#/components/messages/ExportCompleted' }
+      ExportFailed: { $ref: '#/components/messages/ExportFailed' }
+  memory:
+    address: memory.events
+    messages:
+      MemoryFactProposed: { $ref: '#/components/messages/MemoryFactProposed' }
+      MemoryFactConfirmed: { $ref: '#/components/messages/MemoryFactConfirmed' }
+      MemoryFactRetracted: { $ref: '#/components/messages/MemoryFactRetracted' }
+      GroupPeriodClosed: { $ref: '#/components/messages/GroupPeriodClosed' }
+  curriculum:
+    address: curriculum.events
+    messages:
+      CurriculumVersionPublished: { $ref: '#/components/messages/CurriculumVersionPublished' }
+  iam:
+    address: iam.events
+    messages:
+      MembershipRevoked: { $ref: '#/components/messages/MembershipRevoked' }
+      GrantCreated: { $ref: '#/components/messages/GrantCreated' }
+      GrantRevoked: { $ref: '#/components/messages/GrantRevoked' }
+  ai:
+    address: ai.events
+    description: Solo metadatos de llamadas a modelos; nunca contenido de prompts ni respuestas
+    messages:
+      ModelCallCompleted: { $ref: '#/components/messages/ModelCallCompleted' }
+      BudgetExceeded: { $ref: '#/components/messages/BudgetExceeded' }
+  agents:
+    address: agent.events
+    messages:
+      TaskStateChanged: { $ref: '#/components/messages/TaskStateChanged' }
+      ApprovalGateRequested: { $ref: '#/components/messages/ApprovalGateRequested' }
+      ApprovalGateResolved: { $ref: '#/components/messages/ApprovalGateResolved' }
+
+operations:
+  publishPlanEvents:
+    action: send
+    channel: { $ref: '#/channels/plan' }
+  publishDocumentEvents:
+    action: send
+    channel: { $ref: '#/channels/document' }
+  publishMemoryEvents:
+    action: send
+    channel: { $ref: '#/channels/memory' }
+  publishCurriculumEvents:
+    action: send
+    channel: { $ref: '#/channels/curriculum' }
+  publishIamEvents:
+    action: send
+    channel: { $ref: '#/channels/iam' }
+  publishAiEvents:
+    action: send
+    channel: { $ref: '#/channels/ai' }
+  publishAgentEvents:
+    action: send
+    channel: { $ref: '#/channels/agents' }
+
+components:
+  messageTraits:
+    Envelope:
+      headers:
+        type: object
+        required: [X-Event-Id, X-Signature]
+        properties:
+          X-Event-Id: { type: string, format: uuid }
+          X-Signature:
+            type: string
+            description: 'sha256=<HMAC del cuerpo con el secreto de la suscripción>'
+
+  schemas:
+    EventBase:
+      type: object
+      required: [event_id, event_type, schema_version, occurred_at, tenant_id]
+      properties:
+        event_id: { type: string, format: uuid }
+        event_type: { type: string }
+        schema_version: { type: string, const: '1' }
+        occurred_at: { type: string, format: date-time }
+        tenant_id: { type: string, format: uuid }
+        trace_id: { type: string }
+    PlanRef:
+      type: object
+      required: [plan_id]
+      properties:
+        plan_id: { type: string, format: uuid }
+        section_id: { type: [string, 'null'], format: uuid }
+    VersionRef:
+      type: object
+      properties:
+        prior_version_id: { type: [string, 'null'], format: uuid }
+        new_version_id: { type: [string, 'null'], format: uuid }
+
+  messages:
+    PlanCreated:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [group_id, subject, curriculum_version_id]
+            properties:
+              group_id: { type: string, format: uuid }
+              subject: { type: string, enum: [espanol, matematica, estudios_sociales_civica, ciencias] }
+              curriculum_version_id: { type: string, format: uuid }
+    ExportRequested:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [export_id, format]
+            properties:
+              export_id: { type: string, format: uuid }
+              format: { type: string, enum: [docx, pdf, html] }
+    ArtifactVersionCreated:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - $ref: '#/components/schemas/VersionRef'
+          - type: object
+            required: [content_hash, authorship]
+            properties:
+              content_hash: { type: string, pattern: '^[a-f0-9]{64}$' }
+              authorship: { type: string, enum: [teacher, assistant_accepted, import] }
+    ModelCallCompleted:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [model_call_id, provider, egress_decision, tokens_in, tokens_out]
+            properties:
+              model_call_id: { type: string, format: uuid }
+              task_id: { type: [string, 'null'], format: uuid }
+              provider: { type: string }
+              model_alias: { type: string }
+              egress_decision: { type: string, enum: [allowed, redacted, blocked] }
+              tokens_in: { type: integer, minimum: 0 }
+              tokens_out: { type: integer, minimum: 0 }
+              latency_ms: { type: integer, minimum: 0 }
+    BudgetExceeded:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [budget_scope, scope_ref]
+            properties:
+              budget_scope: { type: string, enum: [task, user, tenant] }
+              scope_ref: { type: string, format: uuid }
+    PatchProposed:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [patch_id, base_version_id, proposed_by_actor_type]
+            properties:
+              patch_id: { type: string, format: uuid }
+              base_version_id: { type: string, format: uuid }
+              proposed_by_actor_type: { type: string, enum: [teacher, assistant] }
+    PatchAccepted:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - $ref: '#/components/schemas/VersionRef'
+          - type: object
+            required: [patch_id]
+            properties:
+              patch_id: { type: string, format: uuid }
+    PatchRejected:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [patch_id]
+            properties:
+              patch_id: { type: string, format: uuid }
+    PatchStale:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [patch_id, base_version_id, current_version_id]
+            properties:
+              patch_id: { type: string, format: uuid }
+              base_version_id: { type: string, format: uuid }
+              current_version_id: { type: string, format: uuid }
+    SectionApproved:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [approval_id, artifact_version_id, content_hash]
+            properties:
+              approval_id: { type: string, format: uuid }
+              artifact_version_id: { type: string, format: uuid }
+              content_hash: { type: string, pattern: '^[a-f0-9]{64}$' }
+    SectionReopened:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+    PlanStateChanged:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [from_state, to_state]
+            properties:
+              from_state: { type: string }
+              to_state: { type: string }
+    ReflectionRecorded:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [reflection_id, group_id]
+            properties:
+              reflection_id: { type: string, format: uuid }
+              group_id: { type: string, format: uuid }
+    ExportCompleted:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [export_id, format, content_hash]
+            properties:
+              export_id: { type: string, format: uuid }
+              format: { type: string, enum: [docx, pdf, html] }
+              content_hash: { type: string, pattern: '^[a-f0-9]{64}$' }
+    ExportFailed:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - $ref: '#/components/schemas/PlanRef'
+          - type: object
+            required: [export_id, problem_code]
+            properties:
+              export_id: { type: string, format: uuid }
+              problem_code: { type: string }
+    MemoryFactProposed:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [fact_id, scope, scope_ref]
+            properties:
+              fact_id: { type: string, format: uuid }
+              scope: { type: string, enum: [teacher, group, plan, institution] }
+              scope_ref: { type: string, format: uuid }
+    MemoryFactConfirmed:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [fact_id, scope, scope_ref, valid_from]
+            properties:
+              fact_id: { type: string, format: uuid }
+              scope: { type: string, enum: [teacher, group, plan, institution] }
+              scope_ref: { type: string, format: uuid }
+              valid_from: { type: string, format: date-time }
+              supersedes_fact_id: { type: [string, 'null'], format: uuid }
+    MemoryFactRetracted:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [fact_id, hard_delete]
+            properties:
+              fact_id: { type: string, format: uuid }
+              hard_delete: { type: boolean }
+    GroupPeriodClosed:
+      traits: [{ $ref: '#/components/messageTraits/Envelope' }]
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [group_id, period]
+            properties:
+              group_id: { type: string, format: uuid }
+              period: { type: string }
+    CurriculumVersionPublished:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [curriculum_version_id]
+            properties:
+              curriculum_version_id: { type: string, format: uuid }
+    MembershipRevoked:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [membership_id, user_id, authz_version]
+            properties:
+              membership_id: { type: string, format: uuid }
+              user_id: { type: string, format: uuid }
+              authz_version: { type: integer }
+    GrantCreated:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [grant_id, resource_type, resource_id, purpose, expires_at]
+            properties:
+              grant_id: { type: string, format: uuid }
+              resource_type: { type: string }
+              resource_id: { type: string, format: uuid }
+              purpose: { type: string }
+              expires_at: { type: string, format: date-time }
+    GrantRevoked:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [grant_id]
+            properties:
+              grant_id: { type: string, format: uuid }
+    TaskStateChanged:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [task_id, from_state, to_state]
+            properties:
+              task_id: { type: string, format: uuid }
+              from_state: { type: string }
+              to_state: { type: string }
+              cause: { type: [string, 'null'] }
+    ApprovalGateRequested:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [gate_id, task_id, action, expires_at]
+            properties:
+              gate_id: { type: string, format: uuid }
+              task_id: { type: string, format: uuid }
+              action: { type: string, enum: [overwrite_approved, share_content, schedule_communication, export_student_records, reveal_identity, change_permissions, delete_data] }
+              expires_at: { type: string, format: date-time }
+    ApprovalGateResolved:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/EventBase'
+          - type: object
+            required: [gate_id, task_id, resolution]
+            properties:
+              gate_id: { type: string, format: uuid }
+              task_id: { type: string, format: uuid }
+              resolution: { type: string, enum: [approved, rejected, expired, invalidated] }

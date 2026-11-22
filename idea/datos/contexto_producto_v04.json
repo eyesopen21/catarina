@@ -1,0 +1,51 @@
+{
+  "version": "0.4",
+  "as_of": "2026-11-22",
+  "name": "Plataforma de apoyo docente Costa Rica",
+  "positioning": "copiloto pedagógico con coautoría docente, memoria contextual, innovación y agentes supervisados",
+  "target": [
+    "docentes públicos individuales",
+    "docentes privados",
+    "cuentas institucionales"
+  ],
+  "core": [
+    "autonomía docente",
+    "proceso conversacional",
+    "decisiones y aprobaciones",
+    "contexto grupo",
+    "currículo MEP",
+    "materiales y evaluación"
+  ],
+  "innovation": [
+    "gateway multimodelo",
+    "APIs propias y MCP",
+    "agentes y groupbots",
+    "workflows durables",
+    "microVM bajo demanda",
+    "grafo curricular y pedagógico privado"
+  ],
+  "non_goals": [
+    "reemplazar profesores",
+    "garantizar cumplimiento automáticamente",
+    "diagnosticar estudiantes",
+    "entrenar modelos externos con menores",
+    "usar microVM para cada chat"
+  ],
+  "legal_warning": "Circular MEP 2026 dispone diseño y redacción personal docente; plataforma como apoyo de coelaboración",
+  "evidence_sources": [
+    "MEP 2026",
+    "TEC INNOVA-MatIA 2026",
+    "UCR 2025-2026",
+    "EEF/NFER 2024-2026",
+    "Claude for Teachers 2026",
+    "Ociann Class 2026"
+  ],
+  "source_of_truth_order": [
+    "norma MEP vigente",
+    "decisiones confirmadas del docente",
+    "observaciones verificadas",
+    "recomendación pedagógica",
+    "salida IA"
+  ],
+  "status": "especificación no implementada"
+}

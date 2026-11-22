@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/plataforma-docente/patch.schema.json",
+  "title": "Patch",
+  "description": "Propuesta de cambio sobre una sección. Solo cambia contenido tras accept_patch del docente (FR-PLN-03, FR-PLN-06).",
+  "type": "object",
+  "required": ["id", "plan_id", "section_id", "base_version_id", "status", "proposed_by_actor_type", "diff", "impact", "created_at"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "plan_id": { "type": "string", "format": "uuid" },
+    "section_id": { "type": "string", "format": "uuid" },
+    "base_version_id": { "type": "string", "format": "uuid" },
+    "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "stale", "withdrawn"] },
+    "proposed_by_actor_type": { "type": "string", "enum": ["teacher", "assistant"] },
+    "proposed_content": { "$ref": "plan-section.schema.json#/$defs/SectionContent" },
+    "diff": {
+      "type": "array",
+      "description": "Operaciones de diff a nivel de campo",
+      "items": {
+        "type": "object",
+        "required": ["op", "path"],
+        "properties": {
+          "op": { "type": "string", "enum": ["add", "remove", "replace"] },
+          "path": { "type": "string" },
+          "before": {},
+          "after": {}
+        },
+        "additionalProperties": false
+      }
+    },
+    "impact": {
+      "type": "array",
+      "description": "Secciones dependientes afectadas; cada una requiere su propia aprobación",
+      "items": {
+        "type": "object",
+        "required": ["section_id", "kind", "reason"],
+        "properties": {
+          "section_id": { "type": "string", "format": "uuid" },
+          "kind": { "type": "string" },
+          "reason": { "type": "string" },
+          "section_state": { "type": "string", "enum": ["draft", "proposed", "approved", "reopened"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "frozen_section_ids": {
+      "type": "array",
+      "description": "Secciones congeladas en esta revisión (p. ej. inicio y cierre)",
+      "items": { "type": "string", "format": "uuid" }
+    },
+    "task_id": { "type": ["string", "null"], "format": "uuid" },
+    "step_key": { "type": ["string", "null"] },
+    "context_manifest_id": { "type": ["string", "null"], "format": "uuid" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

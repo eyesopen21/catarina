@@ -1,0 +1,46 @@
+{
+  "name": "curriculum.search_outcomes",
+  "description": "Busca aprendizajes esperados y orientaciones en una versión curricular publicada. Devuelve cita de fuente y sección. Solo lectura de datos públicos (C0).",
+  "requiredScopes": ["curriculum:read"],
+  "sideEffects": "none",
+  "dataClassMax": "C0",
+  "requiresApproval": false,
+  "rateLimit": { "perMinute": 60 },
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["curriculum_version_id", "subject", "query"],
+    "properties": {
+      "curriculum_version_id": { "type": "string", "format": "uuid" },
+      "subject": { "type": "string", "enum": ["espanol", "matematica", "estudios_sociales_civica", "ciencias"] },
+      "level": { "type": "string", "enum": ["I_ciclo", "II_ciclo"] },
+      "query": { "type": "string", "minLength": 1, "maxLength": 300 },
+      "limit": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10 }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["items"],
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["outcome_id", "code", "text", "source_id", "source_section", "validation_status"],
+          "properties": {
+            "outcome_id": { "type": "string", "format": "uuid" },
+            "code": { "type": "string" },
+            "text": { "type": "string" },
+            "source_id": { "type": "string", "format": "uuid" },
+            "source_section": { "type": "string" },
+            "validation_status": { "type": "string", "enum": ["unvalidated", "expert_validated"] }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

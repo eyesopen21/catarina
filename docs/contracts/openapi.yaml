@@ -1,0 +1,1175 @@
+openapi: 3.1.0
+info:
+  title: Plataforma Docente API
+  version: 0.1.0-draft
+  summary: Contrato propuesto (no implementado) de la API REST v1.
+  description: |
+    Contrato de diseño derivado de 02-SRS y 05-Technical-Specifications.
+    Estado: Proposed. Sin PII de menores en ningún ejemplo.
+    Concurrencia optimista con ETag/If-Match, idempotencia con Idempotency-Key,
+    errores application/problem+json (RFC 9457).
+  license:
+    name: Por definir (OD-01)
+    identifier: NOASSERTION
+servers:
+  - url: https://api.example.invalid/v1
+    description: Placeholder; dominio por definir
+security:
+  - oidc: []
+tags:
+  - name: groups
+  - name: plans
+  - name: sections
+  - name: patches
+  - name: validations
+  - name: exports
+  - name: memory
+  - name: curriculum
+  - name: tasks
+
+paths:
+  /groups:
+    get:
+      tags: [groups]
+      operationId: listGroups
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: period
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Página de grupos del docente autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupPage'
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [groups]
+      operationId: createGroup
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupCreate' }
+      responses:
+        '201':
+          description: Grupo creado
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans:
+    get:
+      tags: [plans]
+      operationId: listPlans
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: state
+          in: query
+          schema: { $ref: '#/components/schemas/PlanState' }
+        - name: group_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: subject
+          in: query
+          schema: { $ref: '#/components/schemas/Subject' }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [updated_at, -updated_at, title, -title]
+      responses:
+        '200':
+          description: Página de planes visibles para el actor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanPage' }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [plans]
+      operationId: createPlan
+      description: Crea un plan en estado `idea` desde la intención docente (FR-PLN-02).
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanCreate' }
+      responses:
+        '201':
+          description: Plan creado
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LessonPlan' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    get:
+      tags: [plans]
+      operationId: getPlan
+      responses:
+        '200':
+          description: Plan con su estado derivado
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LessonPlan' }
+        default: { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [plans]
+      operationId: updatePlanMetadata
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema: { $ref: '#/components/schemas/PlanMetadataUpdate' }
+      responses:
+        '200':
+          description: Actualizado
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LessonPlan' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/sections:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    get:
+      tags: [sections]
+      operationId: listSections
+      parameters:
+        - name: kind
+          in: query
+          schema: { $ref: '#/components/schemas/SectionKind' }
+      responses:
+        '200':
+          description: Secciones del plan en orden
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: './schemas/plan-section.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [sections]
+      operationId: createSection
+      description: Crea una sección `draft` escrita por el docente (evento create_block).
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SectionCreate' }
+      responses:
+        '201':
+          description: Sección creada
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: './schemas/plan-section.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/sections/{sectionId}:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/SectionId'
+    get:
+      tags: [sections]
+      operationId: getSection
+      responses:
+        '200':
+          description: Sección con su versión actual
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: './schemas/plan-section.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/sections/{sectionId}/versions:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/SectionId'
+    get:
+      tags: [sections]
+      operationId: listSectionVersions
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Historial inmutable de versiones
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ArtifactVersion' }
+                  next_cursor: { type: [string, 'null'] }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/sections/{sectionId}/approve:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/SectionId'
+    post:
+      tags: [sections]
+      operationId: approveSection
+      description: |
+        Aprueba una versión concreta (INV-01, INV-02). Solo actores docentes.
+        409 `version-mismatch` si `artifact_version_id` ya no es la versión actual; 409 `section-approved` si ya está aprobada.
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [artifact_version_id]
+              properties:
+                artifact_version_id: { type: string, format: uuid }
+                scope: { type: string, maxLength: 200 }
+      responses:
+        '200':
+          description: Sección aprobada
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: './schemas/plan-section.schema.json' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/sections/{sectionId}/reopen:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/SectionId'
+    post:
+      tags: [sections]
+      operationId: reopenSection
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 1000 }
+      responses:
+        '200':
+          description: Sección reabierta
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: './schemas/plan-section.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/sections/{sectionId}/revert:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/SectionId'
+    post:
+      tags: [sections]
+      operationId: revertSection
+      description: Crea una nueva versión con el contenido de `target_version_id` (FR-PLN-09). Rechazado si la sección está aprobada.
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target_version_id]
+              properties:
+                target_version_id: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Nueva versión creada
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: './schemas/plan-section.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/patches:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    get:
+      tags: [patches]
+      operationId: listPatches
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, rejected, stale, withdrawn]
+      responses:
+        '200':
+          description: Patches del plan
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: './schemas/patch.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [patches]
+      operationId: proposePatch
+      description: Propuesta del docente. Las propuestas del asistente llegan por la herramienta `plan.propose_patch`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [section_id, base_version_id, proposed_content]
+              properties:
+                section_id: { type: string, format: uuid }
+                base_version_id: { type: string, format: uuid }
+                proposed_content: { $ref: './schemas/plan-section.schema.json#/$defs/SectionContent' }
+      responses:
+        '201':
+          description: Patch pendiente con diff e impacto
+          content:
+            application/json:
+              schema: { $ref: './schemas/patch.schema.json' }
+        '409': { $ref: '#/components/responses/Problem' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/patches/{patchId}/accept:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/PatchId'
+    post:
+      tags: [patches]
+      operationId: acceptPatch
+      description: |
+        CAS sobre la versión base (FR-PLN-03). `If-Match` es el ETag de la sección objetivo.
+        409 `patch-stale` o `section-approved`.
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Patch aceptado; nueva versión actual
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: './schemas/plan-section.schema.json' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/patches/{patchId}/reject:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/PatchId'
+    post:
+      tags: [patches]
+      operationId: rejectPatch
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason: { type: string, maxLength: 1000 }
+      responses:
+        '200':
+          description: Patch rechazado
+          content:
+            application/json:
+              schema: { $ref: './schemas/patch.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/validations:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    post:
+      tags: [validations]
+      operationId: validatePlan
+      description: Ejecuta las reglas curriculares y pedagógicas aplicables (FR-CUR-03). Nunca emite sello de cumplimiento.
+      responses:
+        '200':
+          description: Resultado de validación
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationResult' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/draft-requests:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    post:
+      tags: [tasks]
+      operationId: requestDraft
+      description: Crea una Task de generación de propuesta. El resultado llega como Patch pendiente.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target_section_ids, instruction]
+              properties:
+                target_section_ids:
+                  type: array
+                  minItems: 1
+                  items: { type: string, format: uuid }
+                instruction: { type: string, minLength: 1, maxLength: 4000 }
+                excluded_memory_fact_ids:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        '202':
+          description: Tarea aceptada
+          headers:
+            Location:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '429': { $ref: '#/components/responses/Problem' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/exports:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    post:
+      tags: [exports]
+      operationId: requestExport
+      description: Requiere atestación docente (FR-PLN-15) y supera INV-09/INV-10.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [format, attestation_accepted]
+              properties:
+                format:
+                  type: string
+                  enum: [docx, pdf, html]
+                include_teacher_solutions:
+                  type: boolean
+                  default: false
+                attestation_accepted:
+                  type: boolean
+                  const: true
+      responses:
+        '202':
+          description: Export en curso
+          headers:
+            Location:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExportJob' }
+        '422': { $ref: '#/components/responses/Problem' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /exports/{exportId}:
+    parameters:
+      - name: exportId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [exports]
+      operationId: getExport
+      responses:
+        '200':
+          description: Estado del export y URL firmada de descarga cuando está almacenado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExportJob' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/reflections:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    post:
+      tags: [plans]
+      operationId: recordReflection
+      description: |
+        Registra la aplicación y la reflexión docente (record_reflection, FR-PLN-12).
+        La primera reflexión con `applied_on` sobre un plan `exported` lo pasa a `implemented`;
+        `closes_cycle = true` lo pasa a `reflected`. Crea MemoryEvidence; nunca confirma hechos.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [applied_on, kind, observation_text]
+              properties:
+                applied_on: { type: string, format: date }
+                section_id: { type: [string, 'null'], format: uuid }
+                kind: { type: string, enum: [observation, barrier, suggestion] }
+                observation_text:
+                  type: string
+                  maxLength: 2000
+                  examples: ['La dinámica funcionó, pero la consigna 3 fue demasiado larga']
+                evidence_kind: { type: string, enum: [real, simulated_example], default: real }
+                closes_cycle: { type: boolean, default: false }
+      responses:
+        '201':
+          description: Reflexión registrada; incluye la pregunta de si debe proponerse como preferencia
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reflection_id, plan_state]
+                properties:
+                  reflection_id: { type: string, format: uuid }
+                  plan_state: { $ref: '#/components/schemas/PlanState' }
+                  suggested_memory_fact_id: { type: [string, 'null'], format: uuid }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /plans/{planId}/events:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    get:
+      tags: [plans]
+      operationId: listDecisionEvents
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Eventos de decisión (solo lectura)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: './schemas/decision-event.schema.json' }
+                  next_cursor: { type: [string, 'null'] }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /groups/{groupId}/roster:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [groups]
+      operationId: getGroupRoster
+      description: |
+        Devuelve el roster del grupo descifrado por VaultService para el docente del grupo
+        (propósito `display_roster`, auditado; FR-STU-01). Este endpoint no está disponible
+        para herramientas MCP ni agentes (FR-STU-02).
+      responses:
+        '200':
+          description: Roster del grupo
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [student_ref, display_name]
+                      properties:
+                        student_ref: { type: string, format: uuid }
+                        display_name: { type: string, examples: ['Estudiante ficticio 1'] }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [groups]
+      operationId: addStudentToRoster
+      description: Crea un `student_ref` aleatorio y guarda el nombre cifrado en la bóveda. Opcional (09 §14).
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [display_name]
+              properties:
+                display_name: { type: string, minLength: 1, maxLength: 120 }
+      responses:
+        '201':
+          description: Estudiante agregado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [student_ref]
+                properties:
+                  student_ref: { type: string, format: uuid }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /groups/{groupId}/memory-facts:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [memory]
+      operationId: listGroupMemoryFacts
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: './schemas/memory-fact.schema.json#/properties/status' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Hechos de memoria del grupo con procedencia
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: './schemas/memory-fact.schema.json' }
+                  next_cursor: { type: [string, 'null'] }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [memory]
+      operationId: createMemoryFact
+      description: El docente registra un hecho con evidencia; queda `confirmed`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemoryFactCreate' }
+      responses:
+        '201':
+          description: Hecho creado
+          content:
+            application/json:
+              schema: { $ref: './schemas/memory-fact.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /memory-facts/{factId}:
+    parameters:
+      - $ref: '#/components/parameters/FactId'
+    get:
+      tags: [memory]
+      operationId: getMemoryFact
+      responses:
+        '200':
+          description: Hecho con evidencia
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: './schemas/memory-fact.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [memory]
+      operationId: deleteMemoryFact
+      description: Hard delete e invalidación de derivados (FR-MEM-04).
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204':
+          description: Eliminado
+        default: { $ref: '#/components/responses/Problem' }
+
+  /memory-facts/{factId}/{action}:
+    parameters:
+      - $ref: '#/components/parameters/FactId'
+      - name: action
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [confirm, reject, retract]
+    post:
+      tags: [memory]
+      operationId: transitionMemoryFact
+      description: Solo actores docentes. `confirm` exige ≥1 evidencia (INV-03).
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                edited_statement: { type: string, maxLength: 2000 }
+                reason: { type: string, maxLength: 1000 }
+      responses:
+        '200':
+          description: Hecho actualizado
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+          content:
+            application/json:
+              schema: { $ref: './schemas/memory-fact.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /context-manifests/{manifestId}:
+    parameters:
+      - name: manifestId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [memory]
+      operationId: getContextManifest
+      description: «Por qué recordé esto» (FR-MEM-05).
+      responses:
+        '200':
+          description: Manifiesto de contexto
+          content:
+            application/json:
+              schema: { $ref: './schemas/context-manifest.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /curriculum/outcomes:
+    get:
+      tags: [curriculum]
+      operationId: listLearningOutcomes
+      security:
+        - oidc: []
+      parameters:
+        - name: curriculum_version_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: subject
+          in: query
+          schema: { $ref: '#/components/schemas/Subject' }
+        - name: level
+          in: query
+          schema: { type: string }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Aprendizajes esperados con procedencia
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/LearningOutcome' }
+                  next_cursor: { type: [string, 'null'] }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /curriculum/rules:
+    get:
+      tags: [curriculum]
+      operationId: listCurriculumRules
+      parameters:
+        - name: curriculum_version_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: subject
+          in: query
+          schema: { $ref: '#/components/schemas/Subject' }
+      responses:
+        '200':
+          description: Reglas versionadas
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: './schemas/curriculum-rule.schema.json' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /tasks/{taskId}:
+    parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [tasks]
+      operationId: getTask
+      responses:
+        '200':
+          description: Estado de la tarea
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /tasks/{taskId}/cancel:
+    parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [tasks]
+      operationId: cancelTask
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Tarea cancelada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /approval-gates/{gateId}/resolve:
+    parameters:
+      - name: gateId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [tasks]
+      operationId: resolveApprovalGate
+      description: Gate humano de acciones sensibles (FR-AGX-03). Etapa 3.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [resolution]
+              properties:
+                resolution:
+                  type: string
+                  enum: [approved, rejected]
+                reason: { type: string, maxLength: 1000 }
+      responses:
+        '200':
+          description: Gate resuelto
+        default: { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      openIdConnectUrl: https://idp.example.invalid/.well-known/openid-configuration
+
+  headers:
+    ETag:
+      description: Versión débil del recurso (`W/"<row_version>"`).
+      schema: { type: string }
+    RetryAfter:
+      description: Segundos hasta poder reintentar.
+      schema: { type: integer, minimum: 0 }
+
+  parameters:
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    SectionId:
+      name: sectionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    PatchId:
+      name: patchId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    FactId:
+      name: factId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: ETag obtenido en la última lectura. Ausente → 428; distinto → 412.
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Clave aleatoria ≥ 128 bits; TTL provisional 24 h (05 §7).
+      schema: { type: string, minLength: 22, maxLength: 128 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+
+  responses:
+    Problem:
+      description: Error RFC 9457
+      headers:
+        Retry-After: { $ref: '#/components/headers/RetryAfter' }
+      content:
+        application/problem+json:
+          schema: { $ref: './schemas/problem-details.schema.json' }
+
+  schemas:
+    Subject:
+      type: string
+      enum: [espanol, matematica, estudios_sociales_civica, ciencias]
+    PlanState:
+      type: string
+      enum: [idea, draft, in_review, partially_approved, approved, exported, implemented, reflected]
+    SectionKind:
+      type: string
+      enum: [learning_outcome, content, methodology, strategy, activity, question, annex, indicator, instrument, time, source, competency, reflection]
+    Group:
+      type: object
+      required: [id, name, grade, period, status]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, examples: ['grupo-4A-ficticio'] }
+        grade: { type: string }
+        period: { type: string }
+        size_band: { type: string, enum: ['1-15', '16-30', '31+'] }
+        status: { type: string, enum: [active, closed] }
+    GroupCreate:
+      type: object
+      additionalProperties: false
+      required: [name, grade, period]
+      properties:
+        name: { type: string, maxLength: 80 }
+        grade: { type: string }
+        period: { type: string }
+        size_band: { type: string, enum: ['1-15', '16-30', '31+'] }
+    GroupPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Group' }
+        next_cursor: { type: [string, 'null'] }
+    LessonPlan:
+      type: object
+      required: [id, group_id, subject, period, curriculum_version_id, template_id, state, visibility, row_version]
+      properties:
+        id: { type: string, format: uuid }
+        group_id: { type: string, format: uuid }
+        subject: { $ref: '#/components/schemas/Subject' }
+        period: { type: string }
+        title: { type: string }
+        curriculum_version_id: { type: string, format: uuid }
+        template_id: { type: string, format: uuid }
+        state: { $ref: '#/components/schemas/PlanState' }
+        visibility: { type: string, enum: [private, shared] }
+        row_version: { type: integer }
+        validation_status: { type: string, enum: [not_run, findings, validation_incomplete, no_findings] }
+    PlanCreate:
+      type: object
+      additionalProperties: false
+      required: [group_id, subject, period]
+      properties:
+        group_id: { type: string, format: uuid }
+        subject: { $ref: '#/components/schemas/Subject' }
+        period: { type: string }
+        learning_outcome_ids:
+          type: array
+          items: { type: string, format: uuid }
+        content: { type: string, maxLength: 2000 }
+        lessons: { type: integer, minimum: 1 }
+        creative_idea:
+          type: string
+          maxLength: 2000
+          examples: ['Quiero iniciar con un juego de palabras']
+    PlanMetadataUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        title: { type: string, maxLength: 200 }
+        visibility: { type: string, enum: [private, shared] }
+    PlanPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/LessonPlan' }
+        next_cursor: { type: [string, 'null'] }
+    SectionCreate:
+      type: object
+      additionalProperties: false
+      required: [kind, position, content]
+      properties:
+        kind: { $ref: '#/components/schemas/SectionKind' }
+        position: { type: integer, minimum: 0 }
+        title: { type: string, maxLength: 200 }
+        content: { $ref: './schemas/plan-section.schema.json#/$defs/SectionContent' }
+    ArtifactVersion:
+      type: object
+      required: [id, version_no, content_hash, authorship, status, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        version_no: { type: integer, minimum: 1 }
+        content_hash: { type: string, pattern: '^[a-f0-9]{64}$' }
+        authorship: { type: string, enum: [teacher, assistant_accepted, import] }
+        parent_version_id: { type: [string, 'null'], format: uuid }
+        status: { type: string, enum: [current, superseded] }
+        created_at: { type: string, format: date-time }
+    ValidationResult:
+      type: object
+      required: [status, findings]
+      properties:
+        status: { type: string, enum: [findings, validation_incomplete, no_findings] }
+        findings:
+          type: array
+          items:
+            type: object
+            required: [rule_id, rule_class, severity, message, source_ref]
+            properties:
+              rule_id: { type: string, format: uuid }
+              rule_class: { type: string, enum: [required_by_MEP, recommended_by_pedagogy, teacher_preference, local_institution_policy] }
+              severity: { type: string, enum: [error, warning, info] }
+              section_id: { type: [string, 'null'], format: uuid }
+              message: { type: string }
+              source_ref:
+                type: object
+                required: [source_id, section]
+                properties:
+                  source_id: { type: string, format: uuid }
+                  section: { type: string }
+    Task:
+      type: object
+      required: [id, type, state]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [draft_section, selective_revision, annex, indicators, memory_consolidation, export] }
+        state: { type: string, enum: [queued, leased, running, awaiting_approval, retry_wait, succeeded, failed, dead_lettered, cancelled, expired] }
+        plan_id: { type: [string, 'null'], format: uuid }
+        result_patch_ids:
+          type: array
+          items: { type: string, format: uuid }
+        failure_reason: { type: [string, 'null'] }
+    ExportJob:
+      type: object
+      required: [id, format, status]
+      properties:
+        id: { type: string, format: uuid }
+        format: { type: string, enum: [docx, pdf, html] }
+        status: { type: string, enum: [queued, rendering, stored, failed] }
+        content_hash: { type: [string, 'null'], pattern: '^[a-f0-9]{64}$' }
+        download_url: { type: [string, 'null'], format: uri }
+    LearningOutcome:
+      type: object
+      required: [id, subject, level, code, text, source_ref]
+      properties:
+        id: { type: string, format: uuid }
+        subject: { $ref: '#/components/schemas/Subject' }
+        level: { type: string }
+        cycle: { type: string, enum: [I, II] }
+        code: { type: string }
+        text: { type: string }
+        source_ref:
+          type: object
+          required: [source_id, section]
+          properties:
+            source_id: { type: string, format: uuid }
+            section: { type: string }
+    MemoryFactCreate:
+      type: object
+      additionalProperties: false
+      required: [scope, predicate_key, statement, condition, evidence]
+      properties:
+        scope: { type: string, enum: [teacher, group, plan] }
+        predicate_key: { type: string, maxLength: 120 }
+        statement: { type: string, maxLength: 2000 }
+        condition: { type: string, enum: [observado, preferencia_confirmada] }
+        valid_from: { type: string, format: date-time }
+        valid_to: { type: [string, 'null'], format: date-time }
+        evidence:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [evidence_type, evidence_ref]
+            properties:
+              evidence_type: { type: string, enum: [decision_event, reflection, conversation_turn, document, observation] }
+              evidence_ref: { type: string, format: uuid }

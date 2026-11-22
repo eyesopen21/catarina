@@ -1,0 +1,36 @@
+{
+  "name": "plan.propose_patch",
+  "description": "Crea un Patch pendiente sobre una sección. No modifica contenido: el docente debe aceptarlo. Rechazado si la sección está aprobada o si base_version_id no es la versión actual. Idempotente por (task_id, step_key).",
+  "requiredScopes": ["plan:propose"],
+  "sideEffects": "creates_pending_proposal",
+  "dataClassMax": "C1",
+  "requiresApproval": false,
+  "rateLimit": { "perMinute": 30 },
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["plan_id", "section_id", "base_version_id", "proposed_content", "task_id", "step_key"],
+    "properties": {
+      "plan_id": { "type": "string", "format": "uuid" },
+      "section_id": { "type": "string", "format": "uuid" },
+      "base_version_id": { "type": "string", "format": "uuid" },
+      "proposed_content": { "$ref": "../schemas/plan-section.schema.json#/$defs/SectionContent" },
+      "rationale": { "type": "string", "maxLength": 2000 },
+      "task_id": { "type": "string", "format": "uuid" },
+      "step_key": { "type": "string", "minLength": 1, "maxLength": 120 },
+      "context_manifest_id": { "type": "string", "format": "uuid" }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["result"],
+    "properties": {
+      "result": { "type": "string", "enum": ["created", "already_exists", "rejected_section_approved", "rejected_stale_base", "rejected_out_of_scope"] },
+      "patch_id": { "type": ["string", "null"], "format": "uuid" },
+      "impact_section_ids": { "type": "array", "items": { "type": "string", "format": "uuid" } }
+    },
+    "additionalProperties": false
+  }
+}

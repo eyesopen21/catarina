@@ -1,0 +1,12 @@
+﻿id,requisito,tipo,prioridad,criterio_de_aceptacion
+DOC-01,Autonomía y autoría docente,Confirmado/Mep,P0,decisión validada por docente
+DOC-02,Memoria de conversación y contexto,Confirmado,P0,recuperar procedencia sin mezclar grupos
+DOC-03,Edición diferencial aprobada,Confirmado,P0,bloques bloqueados intactos
+MEP-01,Plantilla vigente,MEP,P0,fuente versionada
+ART-01,Anexos completos,Confirmado,P0,hoja imprimible real
+SEG-01,Privacidad del menor,Confirmado/Ley,P0,no PII en herramienta externa
+INN-01,IA multimodelo,Confirmado,P0,cambio de proveedor sin pérdida
+AGT-01,Groupbots,Confirmado,P1,sin acceso externo al grafo
+INST-01,Cuentas institucionales,Confirmado,P1,roles y auditoría
+EVI-01,Pilotos y evidencia,Propuesta,P1,calidad evaluada por docentes
+VM-01,MicroVM bajo demanda,Propuesta,P2,ejecución aislada

@@ -1,0 +1,22 @@
+﻿organizacion,recurso,fecha_o_año,url,tipo,uso_y_limitacion,consultado
+MEP,Circular lineamientos 2026,2026,https://ddc.mep.go.cr/cursolectivo/documentos/pdfs/DM-DVM-AC-CIR-0003-2026.pdf,oficial,"autoría personal, periodicidad, competencias",2026-11-22
+MEP,Anexo A plantillas 2026,2026,https://ddc.mep.go.cr/cursolectivo/documentos/pdfs/ANEXO_A_Plantillas_Planeamiento_2026_04-02-2026_version_final%281%29.pdf,oficial,plantilla y redacción mediación,2026-11-22
+MEP,Orientaciones I y II ciclos 2026,2026,https://ddc.mep.go.cr/cursolectivo/documentos/pdfs/PRIMERO_Y_SEGUNDO_CICLOS_ORIENTACIONES_TECNICO_CURRICULARES_06-02-2026.pdf,oficial,metodología y competencias,2026-11-22
+MEP,Guía Inteligencia Artificial en clase,2026,https://www.mep.go.cr/sites/default/files/2026-02/GuiaDocenteIA.pdf,oficial,"cinco componentes prompt, ética",2026-11-22
+MEP,Curso lectivo portal,2026,https://ddc.mep.go.cr/cursolectivo.html,oficial,portal de actualizaciones,2026-11-22
+MEP,Dirección Educación Privada,2026,https://www.mep.go.cr/acerca-del-mep/direccion-educacion-privada,oficial,acreditación y ofertas privadas,2026-11-22
+TEC,Libro Prompts e IA generativa en matemática,2026,https://hdl.handle.net/2238/18937,primaria académica,"Seis R, curaduría y docente orquestador",2026-11-22
+TEC,Libro completo PDF,2026,https://repositoriotec.tec.ac.cr/server/api/core/bitstreams/a9524086-84b6-49ee-b264-798d096af3bc/content,primaria académica,experiencias y ejemplos de matemáticas secundaria,2026-11-22
+UCR,Marco gobernanza IA,2026,https://ci.ucr.ac.cr/marco-gobernanza-gestion-ia,oficial universitario,valores humanistas y gobernanza,2026-11-22
+UCR,Metics formación IA docentes,2026,https://www.ucr.ac.cr/noticias/2026/9/14/como-integrar-la-inteligencia-artificial-en-las-aulas-universitarias-mas-de-100-docentes-de-la-ucr-ya-se-capacitaron.html,oficial universitario,"130 capacitados, 25h, límites",2026-11-22
+UCR,Lección inaugural IA educación primaria,2025,https://educacionprimaria.ucr.ac.cr/noticias/2025/08/22/la-inteligencia-artificial-desafios-y-oportunidades-en-la-educacion-primaria,oficial universitario,pensamiento crítico,2026-11-22
+UCR,Puentes para la Educación,2026,https://www.ucr.ac.cr/noticias/2026/4/15/la-iniciativa-puentes-para-la-educacion-de-la-ucr-articula-esfuerzos-para-enfrentar-la-crisis-educativa-nacional/,oficial universitario,formación y proyectos,2026-11-22
+UCR,SIGPRO coautoría FUNREAD,2026,https://vinv.ucr.ac.cr/sigpro/web/download_projects/836/1,registro proyecto,coautoría docente como investigación,2026-11-22
+Anthropic,Claude for Teachers,2026,https://www.anthropic.com/news/claude-for-teachers,fabricante,"habilidades, privacidad e integración",2026-11-22
+MagicSchool,Herramientas docentes,2026,https://www.magicschool.ai/,fabricante,benchmark catálogo,2026-11-22
+Brisk,Brisk Teaching,2026,https://www.briskteaching.com/,fabricante,benchmark integración al flujo,2026-11-22
+Ociann,Ociann Class,2026,https://www.ociannclass.com/,fabricante,competidor local y claims,2026-11-22
+EEF,Ensayo Aila primaria,2026-10-06,https://educationendowmentfoundation.org.uk/news/ai-tool-reduced-primary-teachers-lesson-planning-time-by-a-quarter-but-views-on-the-tool-were-mixed/,evaluación independiente,"24% tiempo, 464 profesores, adopción mixta",2026-11-22
+EEF,Ensayo ChatGPT planificación,2024-12-12,https://educationendowmentfoundation.org.uk/news/teachers-using-chatgpt-alongside-a-guide-to-support-them-to-use-it-effectively-can-cut-lesson-planning-time-by-over-30-per-cent/,evaluación independiente,31% menos tiempo comparado,2026-11-22
+OWASP,ASVS,2026,https://owasp.org/www-project-application-security-verification-standard/,estándar abierto,seguridad aplicación,2026-11-22
+NIST,Cybersecurity Framework,2026,https://www.nist.gov/cyberframework,estándar abierto,gestión de riesgos,2026-11-22

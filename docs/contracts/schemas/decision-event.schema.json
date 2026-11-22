@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/plataforma-docente/decision-event.schema.json",
+  "title": "DecisionEvent",
+  "description": "Evento append-only de decisión (S20 §Contrato conceptual, FR-MEM-01, INV-07).",
+  "type": "object",
+  "required": ["event_id", "tenant_id", "teacher_id", "plan_id", "event_type", "decision_source", "teacher_confirmation", "timestamp", "pii_classification"],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string", "format": "uuid" },
+    "teacher_id": { "type": "string", "format": "uuid" },
+    "plan_id": { "type": "string", "format": "uuid" },
+    "section_id": { "type": ["string", "null"], "format": "uuid" },
+    "event_type": {
+      "type": "string",
+      "enum": ["create_block", "propose_patch", "accept_patch", "reject_patch", "approve_block", "reopen_block", "attach_evidence", "record_reflection", "request_export"]
+    },
+    "prior_version": { "type": ["string", "null"], "format": "uuid" },
+    "new_version": { "type": ["string", "null"], "format": "uuid" },
+    "decision_source": { "type": "string", "enum": ["teacher", "assistant", "institution", "system"] },
+    "teacher_confirmation": { "type": "boolean" },
+    "rationale": { "type": ["string", "null"], "maxLength": 2000 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "provenance_ref": { "type": ["string", "null"] },
+    "pii_classification": { "type": "string", "enum": ["none", "teacher_content", "group_context"] },
+    "prev_hash": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "event_type": { "enum": ["approve_block", "reopen_block", "accept_patch", "reject_patch", "request_export"] } } },
+      "then": { "properties": { "decision_source": { "const": "teacher" }, "teacher_confirmation": { "const": true } } }
+    }
+  ],
+  "additionalProperties": false
+}

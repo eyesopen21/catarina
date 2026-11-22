@@ -1,0 +1,61 @@
+{
+  "schema_version": "0.4-proposal",
+  "synthetic": true,
+  "group_alias": "grupo-4A-ficticio",
+  "plan_id": "plan-demo-01",
+  "turns": [
+    {
+      "role": "teacher",
+      "intent": "compose",
+      "text": "Quiero iniciar con un juego de palabras y trabajar comprensión lectora en cuatro lecciones",
+      "decision": "propuesta_inicial"
+    },
+    {
+      "role": "assistant",
+      "intent": "propose",
+      "block_id": "inicio",
+      "outcome": "borrador de juego y anexo de tarjetas",
+      "approval": "pending"
+    },
+    {
+      "role": "teacher",
+      "intent": "approve_block",
+      "block_id": "inicio",
+      "approval": "approved",
+      "reason": "pertinente al grupo"
+    },
+    {
+      "role": "teacher",
+      "intent": "revise_block",
+      "block_id": "desarrollo",
+      "text": "Cambiá por actividad cooperativa, pero mantené inicio y cierre",
+      "restrictions": [
+        "inicio:immutable",
+        "cierre:immutable"
+      ]
+    },
+    {
+      "role": "assistant",
+      "intent": "propose_patch",
+      "block_id": "desarrollo",
+      "changes_scope": [
+        "desarrollo"
+      ],
+      "impacted_dependencies": [
+        "indicador-2",
+        "anexo-2"
+      ],
+      "approval": "pending"
+    }
+  ],
+  "privacy": {
+    "no_student_names": true,
+    "not_a_real_transcript": true
+  },
+  "constraints": [
+    "no_modify_approved_without_reopen",
+    "version_every_patch",
+    "show_change_impact",
+    "teacher_approval_required"
+  ]
+}

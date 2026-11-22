@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/plataforma-docente/problem-details.schema.json",
+  "title": "ProblemDetails (RFC 9457)",
+  "description": "Error de la API. Nunca contiene PII ni contenido de prompts (05 §5).",
+  "type": "object",
+  "required": ["type", "title", "status"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "format": "uri-reference",
+      "description": "URI estable del tipo de problema; el sufijo es uno de los listados en enum de `code`."
+    },
+    "title": { "type": "string" },
+    "status": { "type": "integer", "minimum": 400, "maximum": 599 },
+    "detail": { "type": "string" },
+    "instance": { "type": "string", "format": "uri-reference" },
+    "code": {
+      "type": "string",
+      "enum": [
+        "validation-failed",
+        "section-approved",
+        "patch-stale",
+        "version-mismatch",
+        "request-in-progress",
+        "precondition-required",
+        "precondition-failed",
+        "idempotency-key-reuse",
+        "forbidden",
+        "not-found",
+        "curriculum/unsupported-level",
+        "export/incomplete-annex",
+        "rate-limited",
+        "budget-exceeded",
+        "egress-blocked",
+        "provider-unavailable"
+      ]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pointer", "message"],
+        "properties": {
+          "pointer": { "type": "string", "description": "JSON Pointer al campo inválido" },
+          "message": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "current_etag": { "type": "string", "description": "Presente en 412 para reintento informado" },
+    "retry_after_seconds": { "type": "integer", "minimum": 0 },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

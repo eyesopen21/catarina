@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/plataforma-docente/context-manifest.schema.json",
+  "title": "ContextManifest",
+  "description": "Registro de qué contexto se envió al modelo y por qué (FR-AIO-02, FR-MEM-05). Solo referencias y hashes, sin PII.",
+  "type": "object",
+  "required": ["id", "purpose", "created_at", "items", "excluded", "data_classes"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "purpose": { "type": "string", "enum": ["draft_section", "selective_revision", "annex", "indicators", "explain_findings", "memory_consolidation"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "data_classes": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["C0", "C1", "C2", "C3"] },
+      "description": "C4 nunca aparece: la identidad no se envía"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "ref", "truth_level", "reason", "data_class"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["curriculum_rule", "learning_outcome", "approved_section", "target_section", "memory_fact", "resource"] },
+          "ref": { "type": "string", "format": "uuid" },
+          "version": { "type": ["string", "null"] },
+          "content_hash": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+          "truth_level": { "type": "integer", "minimum": 1, "maximum": 5, "description": "Orden de verdad BR-01" },
+          "reason": { "type": "string", "minLength": 1, "description": "Por qué se recuperó (visible al docente)" },
+          "data_class": { "type": "string", "enum": ["C0", "C1", "C2", "C3"] },
+          "token_estimate": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ref", "cause"],
+        "properties": {
+          "ref": { "type": "string", "format": "uuid" },
+          "cause": { "type": "string", "enum": ["excluded_by_teacher", "expired", "not_confirmed", "out_of_audience", "budget", "dlp_redacted"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "frozen_section_ids": { "type": "array", "items": { "type": "string", "format": "uuid" } },
+    "prompt_version": { "type": "string" }
+  },
+  "additionalProperties": false
+}

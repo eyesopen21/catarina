@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/plataforma-docente/memory-fact.schema.json",
+  "title": "MemoryFact",
+  "description": "Hecho de memoria pedagógica con procedencia y validez temporal (FR-MEM-02, INV-03, INV-04). Nunca contiene identidad de estudiantes.",
+  "type": "object",
+  "required": ["id", "scope", "scope_ref", "predicate_key", "statement", "condition", "status", "origin_actor_type", "valid_from", "recorded_at", "evidence", "row_version"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "scope": { "type": "string", "enum": ["teacher", "group", "plan", "institution"] },
+    "scope_ref": { "type": "string", "format": "uuid" },
+    "predicate_key": { "type": "string", "maxLength": 120 },
+    "statement": { "type": "string", "maxLength": 2000 },
+    "condition": { "type": "string", "enum": ["observado", "preferencia_confirmada", "inferencia_por_confirmar"] },
+    "status": { "type": "string", "enum": ["candidate", "confirmed", "review_required", "rejected", "expired", "superseded", "retracted"] },
+    "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "audience": { "type": "string", "enum": ["owner", "group_teachers", "institution"] },
+    "origin_actor_type": { "type": "string", "enum": ["teacher", "assistant", "system"] },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_to": { "type": ["string", "null"], "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": ["string", "null"], "format": "date-time" },
+    "confirmed_by": { "type": ["string", "null"], "format": "uuid" },
+    "confirmed_at": { "type": ["string", "null"], "format": "date-time" },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["evidence_type", "evidence_ref", "captured_at"],
+        "properties": {
+          "evidence_type": { "type": "string", "enum": ["decision_event", "reflection", "conversation_turn", "document", "observation"] },
+          "evidence_ref": { "type": "string", "format": "uuid" },
+          "captured_at": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "row_version": { "type": "integer", "minimum": 0 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "confirmed" } } },
+      "then": {
+        "required": ["confirmed_by", "confirmed_at"],
+        "properties": {
+          "confirmed_by": { "type": "string" },
+          "confirmed_at": { "type": "string" },
+          "evidence": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "origin_actor_type": { "const": "assistant" }, "status": { "const": "candidate" } } },
+      "then": { "properties": { "condition": { "const": "inferencia_por_confirmar" } } }
+    }
+  ],
+  "additionalProperties": false
+}

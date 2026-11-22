@@ -1,0 +1,43 @@
+{
+  "name": "plan.read_sections",
+  "description": "Lee secciones de un plan del docente solicitante (con su estado y versión). Se ejecuta con la autorización del docente; no devuelve datos de otros grupos ni identidad de estudiantes.",
+  "requiredScopes": ["plan:read"],
+  "sideEffects": "none",
+  "dataClassMax": "C1",
+  "requiresApproval": false,
+  "rateLimit": { "perMinute": 60 },
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["plan_id"],
+    "properties": {
+      "plan_id": { "type": "string", "format": "uuid" },
+      "section_ids": { "type": "array", "maxItems": 50, "items": { "type": "string", "format": "uuid" } },
+      "states": { "type": "array", "items": { "type": "string", "enum": ["draft", "proposed", "approved", "reopened"] } }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["sections"],
+    "properties": {
+      "sections": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["section_id", "kind", "state", "current_version_id", "content"],
+          "properties": {
+            "section_id": { "type": "string", "format": "uuid" },
+            "kind": { "type": "string" },
+            "state": { "type": "string", "enum": ["draft", "proposed", "approved", "reopened"] },
+            "current_version_id": { "type": "string", "format": "uuid" },
+            "content": { "type": "object" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}
