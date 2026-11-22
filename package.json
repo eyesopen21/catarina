@@ -1,0 +1,13 @@
+{
+  "name": "catarina",
+  "private": true,
+  "packageManager": "pnpm@10.22.0",
+  "scripts": {
+    "check:architecture": "depcruise api/modules --config .dependency-cruiser.cjs",
+    "test:architecture": "node .ci/test-architecture.mjs",
+    "ci": "pnpm test:architecture"
+  },
+  "devDependencies": {
+    "dependency-cruiser": "18.9.0"
+  }
+}
