@@ -1,0 +1,26 @@
+{
+  "name": "@catarina/contracts",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "types": "src/index.d.ts",
+  "scripts": {
+    "lint": "redocly lint --extends minimal ../../docs/contracts/openapi.yaml && asyncapi validate ../../docs/contracts/asyncapi.yaml",
+    "types:generate": "openapi-typescript ../../docs/contracts/openapi.yaml -o src/generated/openapi.d.ts",
+    "test:types": "node --test test/types-drift.test.mjs",
+    "test:contract": "node --test test/contract.test.mjs",
+    "test:compatibility": "node --test test/compatibility-diff.test.mjs",
+    "mock": "node src/mock-server.mjs",
+    "test:mock": "node --test test/mock-pagination.test.mjs",
+    "check": "pnpm lint && pnpm types:generate && pnpm test:types && pnpm test:contract && pnpm test:mock && pnpm test:compatibility && pnpm check:compatibility",
+    "check:compatibility": "node scripts/check-compatibility.mjs"
+  },
+  "devDependencies": {
+    "@asyncapi/cli": "6.2.2",
+    "@redocly/cli": "2.81.0",
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1",
+    "openapi-typescript": "7.13.0",
+    "yaml": "2.8.1"
+  }
+}

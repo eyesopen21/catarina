@@ -1,13 +1,18 @@
 openapi: 3.1.0
 info:
   title: Plataforma Docente API
-  version: 0.1.0-draft
-  summary: Contrato propuesto (no implementado) de la API REST v1.
+  version: 1.0.0
+  summary: Contrato v1 propuesto (pendiente de gate humano; no implementado).
   description: |
     Contrato de diseño derivado de 02-SRS y 05-Technical-Specifications.
-    Estado: Proposed. Sin PII de menores en ningún ejemplo.
+    Estado: Proposed; contrato no congelado hasta revisión humana. Sin PII de menores en ningún ejemplo.
     Concurrencia optimista con ETag/If-Match, idempotencia con Idempotency-Key,
-    errores application/problem+json (RFC 9457).
+    errores application/problem+json (RFC 9457). Los clientes MUST ignorar campos y
+    valores de enum desconocidos. Cambios incompatibles requieren /v2; las deprecaciones
+    se anuncian con Deprecation y Sunset, al menos seis meses antes, y se registran en
+    [CHANGELOG.md](CHANGELOG.md). Los valores de enum son extensibles. La política de
+    deprecación y el historial de cambios viven en ese changelog; ninguna operación v1
+    está deprecada en esta revisión Proposed.
   license:
     name: Por definir (OD-01)
     identifier: NOASSERTION
@@ -18,20 +23,30 @@ security:
   - oidc: []
 tags:
   - name: groups
+    description: Grupos por periodo y roster seudonimizado del docente.
   - name: plans
+    description: Planes de lección, metadatos, reflexiones y eventos de decisión.
   - name: sections
+    description: Secciones tipadas, versiones y transiciones de aprobación.
   - name: patches
+    description: Propuestas de cambio con versión base e impacto.
   - name: validations
+    description: Hallazgos de validación con cita y clase de regla.
   - name: exports
+    description: Exportaciones asíncronas y artefactos inmutables.
   - name: memory
+    description: Hechos de memoria, manifiestos de contexto y proveniencia.
   - name: curriculum
+    description: Curriculo base, aprendizajes y reglas versionadas (solo lectura).
   - name: tasks
+    description: Tareas durables y compuertas de aprobación.
 
 paths:
   /groups:
     get:
       tags: [groups]
       operationId: listGroups
+      summary: Lista grupos
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -49,6 +64,7 @@ paths:
     post:
       tags: [groups]
       operationId: createGroup
+      summary: Crea un grupo
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
@@ -70,6 +86,7 @@ paths:
     get:
       tags: [plans]
       operationId: listPlans
+      summary: Lista planes
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -97,6 +114,7 @@ paths:
     post:
       tags: [plans]
       operationId: createPlan
+      summary: Crea un plan
       description: Crea un plan en estado `idea` desde la intención docente (FR-PLN-02).
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -121,6 +139,7 @@ paths:
     get:
       tags: [plans]
       operationId: getPlan
+      summary: Obtiene un plan
       responses:
         '200':
           description: Plan con su estado derivado
@@ -133,6 +152,7 @@ paths:
     patch:
       tags: [plans]
       operationId: updatePlanMetadata
+      summary: Actualiza metadatos de un plan
       parameters:
         - $ref: '#/components/parameters/IfMatch'
       requestBody:
@@ -156,6 +176,7 @@ paths:
     get:
       tags: [sections]
       operationId: listSections
+      summary: Lista secciones de un plan
       parameters:
         - name: kind
           in: query
@@ -176,6 +197,7 @@ paths:
     post:
       tags: [sections]
       operationId: createSection
+      summary: Crea una sección
       description: Crea una sección `draft` escrita por el docente (evento create_block).
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -201,6 +223,7 @@ paths:
     get:
       tags: [sections]
       operationId: getSection
+      summary: Obtiene una sección
       responses:
         '200':
           description: Sección con su versión actual
@@ -218,6 +241,7 @@ paths:
     get:
       tags: [sections]
       operationId: listSectionVersions
+      summary: Lista versiones de una sección
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -243,6 +267,7 @@ paths:
     post:
       tags: [sections]
       operationId: approveSection
+      summary: Aprueba una sección
       description: |
         Aprueba una versión concreta (INV-01, INV-02). Solo actores docentes.
         409 `version-mismatch` si `artifact_version_id` ya no es la versión actual; 409 `section-approved` si ya está aprobada.
@@ -280,6 +305,7 @@ paths:
     post:
       tags: [sections]
       operationId: reopenSection
+      summary: Reabre una sección
       parameters:
         - $ref: '#/components/parameters/IfMatch'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -310,6 +336,7 @@ paths:
     post:
       tags: [sections]
       operationId: revertSection
+      summary: Revierte una sección
       description: Crea una nueva versión con el contenido de `target_version_id` (FR-PLN-09). Rechazado si la sección está aprobada.
       parameters:
         - $ref: '#/components/parameters/IfMatch'
@@ -340,6 +367,7 @@ paths:
     get:
       tags: [patches]
       operationId: listPatches
+      summary: Lista patches de un plan
       parameters:
         - name: status
           in: query
@@ -362,6 +390,7 @@ paths:
     post:
       tags: [patches]
       operationId: proposePatch
+      summary: Propone un patch
       description: Propuesta del docente. Las propuestas del asistente llegan por la herramienta `plan.propose_patch`.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -393,6 +422,7 @@ paths:
     post:
       tags: [patches]
       operationId: acceptPatch
+      summary: Acepta un patch
       description: |
         CAS sobre la versión base (FR-PLN-03). `If-Match` es el ETag de la sección objetivo.
         409 `patch-stale` o `section-approved`.
@@ -419,6 +449,7 @@ paths:
     post:
       tags: [patches]
       operationId: rejectPatch
+      summary: Rechaza un patch
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
@@ -443,6 +474,7 @@ paths:
     post:
       tags: [validations]
       operationId: validatePlan
+      summary: Valida un plan
       description: Ejecuta las reglas curriculares y pedagógicas aplicables (FR-CUR-03). Nunca emite sello de cumplimiento.
       responses:
         '200':
@@ -458,6 +490,7 @@ paths:
     post:
       tags: [tasks]
       operationId: requestDraft
+      summary: Solicita un borrador asíncrono
       description: Crea una Task de generación de propuesta. El resultado llega como Patch pendiente.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -496,6 +529,7 @@ paths:
     post:
       tags: [exports]
       operationId: requestExport
+      summary: Solicita una exportación asíncrona
       description: Requiere atestación docente (FR-PLN-15) y supera INV-09/INV-10.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -538,6 +572,7 @@ paths:
     get:
       tags: [exports]
       operationId: getExport
+      summary: Obtiene el estado de una exportación
       responses:
         '200':
           description: Estado del export y URL firmada de descarga cuando está almacenado
@@ -552,6 +587,7 @@ paths:
     post:
       tags: [plans]
       operationId: recordReflection
+      summary: Registra una reflexión
       description: |
         Registra la aplicación y la reflexión docente (record_reflection, FR-PLN-12).
         La primera reflexión con `applied_on` sobre un plan `exported` lo pasa a `implemented`;
@@ -596,6 +632,7 @@ paths:
     get:
       tags: [plans]
       operationId: listDecisionEvents
+      summary: Lista eventos de decisión
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -623,6 +660,7 @@ paths:
     get:
       tags: [groups]
       operationId: getGroupRoster
+      summary: Obtiene el roster del grupo
       description: |
         Devuelve el roster del grupo descifrado por VaultService para el docente del grupo
         (propósito `display_roster`, auditado; FR-STU-01). Este endpoint no está disponible
@@ -648,6 +686,7 @@ paths:
     post:
       tags: [groups]
       operationId: addStudentToRoster
+      summary: Añade un estudiante al roster
       description: Crea un `student_ref` aleatorio y guarda el nombre cifrado en la bóveda. Opcional (09 §14).
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -682,6 +721,7 @@ paths:
     get:
       tags: [memory]
       operationId: listGroupMemoryFacts
+      summary: Lista hechos de memoria del grupo
       parameters:
         - name: status
           in: query
@@ -705,6 +745,7 @@ paths:
     post:
       tags: [memory]
       operationId: createMemoryFact
+      summary: Crea un hecho de memoria
       description: El docente registra un hecho con evidencia; queda `confirmed`.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -727,6 +768,7 @@ paths:
     get:
       tags: [memory]
       operationId: getMemoryFact
+      summary: Obtiene un hecho de memoria
       responses:
         '200':
           description: Hecho con evidencia
@@ -739,6 +781,7 @@ paths:
     delete:
       tags: [memory]
       operationId: deleteMemoryFact
+      summary: Elimina un hecho de memoria
       description: Hard delete e invalidación de derivados (FR-MEM-04).
       parameters:
         - $ref: '#/components/parameters/IfMatch'
@@ -759,6 +802,7 @@ paths:
     post:
       tags: [memory]
       operationId: transitionMemoryFact
+      summary: Confirma, rechaza o retracta un hecho de memoria
       description: Solo actores docentes. `confirm` exige ≥1 evidencia (INV-03).
       parameters:
         - $ref: '#/components/parameters/IfMatch'
@@ -791,6 +835,7 @@ paths:
     get:
       tags: [memory]
       operationId: getContextManifest
+      summary: Obtiene un manifiesto de contexto
       description: «Por qué recordé esto» (FR-MEM-05).
       responses:
         '200':
@@ -804,6 +849,7 @@ paths:
     get:
       tags: [curriculum]
       operationId: listLearningOutcomes
+      summary: Lista aprendizajes curriculares
       security:
         - oidc: []
       parameters:
@@ -838,6 +884,7 @@ paths:
     get:
       tags: [curriculum]
       operationId: listCurriculumRules
+      summary: Lista reglas curriculares
       parameters:
         - name: curriculum_version_id
           in: query
@@ -869,6 +916,7 @@ paths:
     get:
       tags: [tasks]
       operationId: getTask
+      summary: Obtiene una tarea
       responses:
         '200':
           description: Estado de la tarea
@@ -886,6 +934,7 @@ paths:
     post:
       tags: [tasks]
       operationId: cancelTask
+      summary: Cancela una tarea
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       responses:
@@ -905,6 +954,7 @@ paths:
     post:
       tags: [tasks]
       operationId: resolveApprovalGate
+      summary: Resuelve una compuerta de aprobación
       description: Gate humano de acciones sensibles (FR-AGX-03). Etapa 3.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -939,6 +989,12 @@ components:
     RetryAfter:
       description: Segundos hasta poder reintentar.
       schema: { type: integer, minimum: 0 }
+    Deprecation:
+      description: Cabecera reservada; se emite solo en recursos deprecados (ninguno en v1). Ver CHANGELOG.md (05 §9).
+      schema: { type: string }
+    Sunset:
+      description: Cabecera reservada; se emite junto a Deprecation. Fecha HTTP de retirada; ver CHANGELOG.md (05 §9).
+      schema: { type: string }
 
   parameters:
     PlanId:
@@ -976,10 +1032,17 @@ components:
     Limit:
       name: limit
       in: query
+      description: Tamaño de página; máximo 100 (05 §8). Valores fuera de rango → 422 `validation-failed`.
       schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
     Cursor:
       name: cursor
       in: query
+      description: |
+        Cursor opaco de la página anterior. El orden estable de toda colección paginada es
+        `(created_at, id)`; el cursor fija la instantánea de inserciones posteriores para que
+        una inserción no produzca duplicados ni omita elementos al continuar. Codifica el
+        último elemento y el límite de secuencia de la instantánea; no es un offset.
+        Parámetros de consulta no declarados por el recurso → 422 `validation-failed`.
       schema: { type: string }
 
   responses:
@@ -990,6 +1053,41 @@ components:
       content:
         application/problem+json:
           schema: { $ref: './schemas/problem-details.schema.json' }
+          examples:
+            validationFailed:
+              summary: 422 - campo o filtro no declarado
+              value:
+                type: https://api.example.invalid/problems/validation-failed
+                title: Solicitud no válida
+                status: 422
+                code: validation-failed
+                detail: El parámetro de consulta no está declarado para este recurso.
+                errors:
+                  - pointer: /query/unknown_filter
+                    message: Parámetro no declarado
+                instance: /v1/plans
+                trace_id: 00000000-0000-4000-8000-000000000099
+            notFound:
+              summary: 404 - recurso ausente o fuera del tenant
+              value:
+                type: https://api.example.invalid/problems/not-found
+                title: Recurso no encontrado
+                status: 404
+                code: not-found
+                detail: El recurso no existe o no pertenece al tenant activo.
+                instance: /v1/plans/00000000-0000-4000-8000-000000000001
+                trace_id: 00000000-0000-4000-8000-000000000098
+            providerUnavailable:
+              summary: 503 - todos los proveedores fallan
+              value:
+                type: https://api.example.invalid/problems/provider-unavailable
+                title: Proveedor no disponible
+                status: 503
+                code: provider-unavailable
+                detail: El editor sigue disponible; reintente más tarde.
+                retry_after_seconds: 30
+                instance: /v1/plans/00000000-0000-4000-8000-000000000001/draft-requests
+                trace_id: 00000000-0000-4000-8000-000000000097
 
   schemas:
     Subject:

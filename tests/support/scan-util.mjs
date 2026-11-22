@@ -1,0 +1,81 @@
+import { readdir } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Shared walking / match hygiene for the PII and secret scanners.
+// Generated and dependency metadata is excluded; source, docs, fixtures and
+// synthetic log samples are always traversed.
+export const SKIPPED_DIRECTORIES = new Set(['.git', 'node_modules', 'dist', 'target', '.codegraph']);
+
+export const TEXT_EXTENSIONS = new Set([
+  '.md', '.txt', '.json', '.jsonl', '.yaml', '.yml', '.toml', '.csv', '.log',
+  '.ts', '.tsx', '.js', '.mjs', '.cjs', '.rs', '.sql', '.env', '.sh', '.py',
+  // Static web artifacts: the deployed index.html is built from this source.
+  // dist/ stays excluded as generated output; the source HTML is scanned.
+  '.html', '.htm',
+]);
+
+export function repositoryRoot(importMetaUrl) {
+  return path.resolve(path.dirname(fileURLToPath(importMetaUrl)), '../..');
+}
+
+export async function* walkTextFiles(directory) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      if (!SKIPPED_DIRECTORIES.has(entry.name)) yield* walkTextFiles(path.join(directory, entry.name));
+    } else if (entry.isFile() && TEXT_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
+      yield path.join(directory, entry.name);
+    }
+  }
+}
+
+// Rejects a match embedded in a longer alphanumeric/identifier token. Unicode
+// properties cover letters and digits in any script (not only ASCII hex), and
+// '_' covers identifiers. This is what prevents a digit run inside a SHA-256,
+// a nanosecond timestamp or a decimal from being read as a phone number. It
+// does not narrow the numeric ranges of any detector.
+const TOKEN_CHAR = /[\p{L}\p{N}_]/u;
+
+export function isDelimited(text, start, length) {
+  const before = text[start - 1];
+  const after = text[start + length];
+  if (before && TOKEN_CHAR.test(before)) return false;
+  if (after && TOKEN_CHAR.test(after)) return false;
+  return true;
+}
+
+// Keeps the longest match when several detectors overlap the same span (e.g.
+// the tail of a national id also looks like a local phone number). Every
+// distinct occurrence is still reported; only duplicate spans are collapsed.
+export function keepDistinctOccurrences(matches) {
+  const ordered = [...matches].sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+  const kept = [];
+  for (const match of ordered) {
+    if (kept.some((other) => match.start < other.end && other.start < match.end)) continue;
+    kept.push(match);
+  }
+  return kept;
+}
+
+// Iterates EVERY occurrence of every global pattern. The previous implementation
+// used pattern.exec() once per detector, hiding all matches after the first.
+// `context` gives rules the surrounding text, the current line and the file
+// path so they can apply narrow, documented structural exceptions (UUID
+// fragments, generated lockfile metadata) without excluding files.
+export function collectMatches(text, detectors, isCandidate = () => true, filePath = '') {
+  const matches = [];
+  for (const { id, pattern } of detectors) {
+    for (const found of text.matchAll(pattern)) {
+      const start = found.index;
+      const end = start + found[0].length;
+      if (!isDelimited(text, start, found[0].length)) continue;
+      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+      const nextBreak = text.indexOf('\n', end);
+      const lineEnd = nextBreak === -1 ? text.length : nextBreak;
+      const context = { text, start, end, line: text.slice(lineStart, lineEnd), filePath };
+      if (!isCandidate(id, found[0], found, context)) continue;
+      matches.push({ kind: id, pattern: pattern.source, value: found[0], start, end });
+    }
+  }
+  return keepDistinctOccurrences(matches).map(({ kind, pattern, value }) => ({ kind, pattern, value }));
+}
