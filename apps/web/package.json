@@ -1,5 +1,8 @@
 {
   "name": "@catarina/web",
   "private": true,
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true});require('node:fs').copyFileSync('index.html','dist/index.html')\""
+  }
 }
