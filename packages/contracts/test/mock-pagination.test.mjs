@@ -76,5 +76,8 @@ test("mock rejects a page size above the documented maximum", async (t) => {
   const response = await fetch(`${baseUrl}/v1/plans?limit=101`);
   assert.equal(response.status, 422);
   assert.equal(response.headers.get("content-type"), "application/problem+json");
-  assert.equal((await response.json()).status, 422);
+  const problem = await response.json();
+  assert.equal(problem.status, 422);
+  assert.equal(problem.code, "validation-failed");
+  assert.equal(problem.type, "https://api.example.invalid/problems/validation-failed");
 });

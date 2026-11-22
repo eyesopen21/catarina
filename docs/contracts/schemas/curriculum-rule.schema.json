@@ -4,7 +4,7 @@
   "title": "CurriculumRule",
   "description": "Regla curricular versionada (S05 §Sistema de reglas, FR-CUR-02, ADR-016). Publicada = inmutable (INV-12).",
   "type": "object",
-  "required": ["id", "curriculum_version_id", "source_id", "source_version", "source_section", "effective_from", "education_level", "modality", "subject", "rule_type", "rule_class", "severity", "validator", "human_explanation", "validation_status"],
+  "required": ["id", "curriculum_version_id", "source_id", "source_version", "source_section", "effective_from", "education_level", "modality", "subject", "rule_type", "rule_class", "severity", "validator", "human_explanation", "exceptions", "validation_status"],
   "properties": {
     "id": { "type": "string", "format": "uuid" },
     "curriculum_version_id": { "type": "string", "format": "uuid" },

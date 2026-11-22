@@ -3,13 +3,16 @@
   "$id": "https://schemas.example.invalid/plataforma-docente/problem-details.schema.json",
   "title": "ProblemDetails (RFC 9457)",
   "description": "Error de la API. Nunca contiene PII ni contenido de prompts (05 §5).",
+  "x-type-uri-template": "https://api.example.invalid/problems/{code}",
+  "x-type-stability": "El URI `type` es estable por `code`; el dominio example.invalid es un marcador de lugar hasta resolver OD-01. Los clientes MUST ignorar extensiones desconocidas.",
   "type": "object",
   "required": ["type", "title", "status"],
   "properties": {
     "type": {
       "type": "string",
       "format": "uri-reference",
-      "description": "URI estable del tipo de problema; el sufijo es uno de los listados en enum de `code`."
+      "pattern": "^https://[a-z0-9.-]+/problems/[a-z0-9][a-z0-9/_-]*$",
+      "description": "URI estable del tipo de problema: `https://<host>/problems/<code>`; el sufijo estable es el `code` listado en el enum. El host example.invalid es marcador de lugar (OD-01)."
     },
     "title": { "type": "string" },
     "status": { "type": "integer", "minimum": 400, "maximum": 599 },

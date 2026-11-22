@@ -11,8 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Lista grupos */
         get: operations["listGroups"];
         put?: never;
+        /** Crea un grupo */
         post: operations["createGroup"];
         delete?: never;
         options?: never;
@@ -27,9 +29,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Lista planes */
         get: operations["listPlans"];
         put?: never;
-        /** @description Crea un plan en estado `idea` desde la intención docente (FR-PLN-02). */
+        /**
+         * Crea un plan
+         * @description Crea un plan en estado `idea` desde la intención docente (FR-PLN-02).
+         */
         post: operations["createPlan"];
         delete?: never;
         options?: never;
@@ -46,12 +52,14 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Obtiene un plan */
         get: operations["getPlan"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
+        /** Actualiza metadatos de un plan */
         patch: operations["updatePlanMetadata"];
         trace?: never;
     };
@@ -64,9 +72,13 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Lista secciones de un plan */
         get: operations["listSections"];
         put?: never;
-        /** @description Crea una sección `draft` escrita por el docente (evento create_block). */
+        /**
+         * Crea una sección
+         * @description Crea una sección `draft` escrita por el docente (evento create_block).
+         */
         post: operations["createSection"];
         delete?: never;
         options?: never;
@@ -84,6 +96,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Obtiene una sección */
         get: operations["getSection"];
         put?: never;
         post?: never;
@@ -103,6 +116,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Lista versiones de una sección */
         get: operations["listSectionVersions"];
         put?: never;
         post?: never;
@@ -125,6 +139,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
+         * Aprueba una sección
          * @description Aprueba una versión concreta (INV-01, INV-02). Solo actores docentes.
          *     409 `version-mismatch` si `artifact_version_id` ya no es la versión actual; 409 `section-approved` si ya está aprobada.
          */
@@ -147,6 +162,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Reabre una sección */
         post: operations["reopenSection"];
         delete?: never;
         options?: never;
@@ -166,7 +182,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Crea una nueva versión con el contenido de `target_version_id` (FR-PLN-09). Rechazado si la sección está aprobada. */
+        /**
+         * Revierte una sección
+         * @description Crea una nueva versión con el contenido de `target_version_id` (FR-PLN-09). Rechazado si la sección está aprobada.
+         */
         post: operations["revertSection"];
         delete?: never;
         options?: never;
@@ -183,9 +202,13 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Lista patches de un plan */
         get: operations["listPatches"];
         put?: never;
-        /** @description Propuesta del docente. Las propuestas del asistente llegan por la herramienta `plan.propose_patch`. */
+        /**
+         * Propone un patch
+         * @description Propuesta del docente. Las propuestas del asistente llegan por la herramienta `plan.propose_patch`.
+         */
         post: operations["proposePatch"];
         delete?: never;
         options?: never;
@@ -206,6 +229,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
+         * Acepta un patch
          * @description CAS sobre la versión base (FR-PLN-03). `If-Match` es el ETag de la sección objetivo.
          *     409 `patch-stale` o `section-approved`.
          */
@@ -228,6 +252,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Rechaza un patch */
         post: operations["rejectPatch"];
         delete?: never;
         options?: never;
@@ -246,7 +271,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Ejecuta las reglas curriculares y pedagógicas aplicables (FR-CUR-03). Nunca emite sello de cumplimiento. */
+        /**
+         * Valida un plan
+         * @description Ejecuta las reglas curriculares y pedagógicas aplicables (FR-CUR-03). Nunca emite sello de cumplimiento.
+         */
         post: operations["validatePlan"];
         delete?: never;
         options?: never;
@@ -265,7 +293,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Crea una Task de generación de propuesta. El resultado llega como Patch pendiente. */
+        /**
+         * Solicita un borrador asíncrono
+         * @description Crea una Task de generación de propuesta. El resultado llega como Patch pendiente.
+         */
         post: operations["requestDraft"];
         delete?: never;
         options?: never;
@@ -284,7 +315,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Requiere atestación docente (FR-PLN-15) y supera INV-09/INV-10. */
+        /**
+         * Solicita una exportación asíncrona
+         * @description Requiere atestación docente (FR-PLN-15) y supera INV-09/INV-10.
+         */
         post: operations["requestExport"];
         delete?: never;
         options?: never;
@@ -301,6 +335,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Obtiene el estado de una exportación */
         get: operations["getExport"];
         put?: never;
         post?: never;
@@ -322,6 +357,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
+         * Registra una reflexión
          * @description Registra la aplicación y la reflexión docente (record_reflection, FR-PLN-12).
          *     La primera reflexión con `applied_on` sobre un plan `exported` lo pasa a `implemented`;
          *     `closes_cycle = true` lo pasa a `reflected`. Crea MemoryEvidence; nunca confirma hechos.
@@ -342,6 +378,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Lista eventos de decisión */
         get: operations["listDecisionEvents"];
         put?: never;
         post?: never;
@@ -361,13 +398,17 @@ export interface paths {
             cookie?: never;
         };
         /**
+         * Obtiene el roster del grupo
          * @description Devuelve el roster del grupo descifrado por VaultService para el docente del grupo
          *     (propósito `display_roster`, auditado; FR-STU-01). Este endpoint no está disponible
          *     para herramientas MCP ni agentes (FR-STU-02).
          */
         get: operations["getGroupRoster"];
         put?: never;
-        /** @description Crea un `student_ref` aleatorio y guarda el nombre cifrado en la bóveda. Opcional (09 §14). */
+        /**
+         * Añade un estudiante al roster
+         * @description Crea un `student_ref` aleatorio y guarda el nombre cifrado en la bóveda. Opcional (09 §14).
+         */
         post: operations["addStudentToRoster"];
         delete?: never;
         options?: never;
@@ -384,9 +425,13 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Lista hechos de memoria del grupo */
         get: operations["listGroupMemoryFacts"];
         put?: never;
-        /** @description El docente registra un hecho con evidencia; queda `confirmed`. */
+        /**
+         * Crea un hecho de memoria
+         * @description El docente registra un hecho con evidencia; queda `confirmed`.
+         */
         post: operations["createMemoryFact"];
         delete?: never;
         options?: never;
@@ -403,10 +448,14 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Obtiene un hecho de memoria */
         get: operations["getMemoryFact"];
         put?: never;
         post?: never;
-        /** @description Hard delete e invalidación de derivados (FR-MEM-04). */
+        /**
+         * Elimina un hecho de memoria
+         * @description Hard delete e invalidación de derivados (FR-MEM-04).
+         */
         delete: operations["deleteMemoryFact"];
         options?: never;
         head?: never;
@@ -425,7 +474,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Solo actores docentes. `confirm` exige ≥1 evidencia (INV-03). */
+        /**
+         * Confirma, rechaza o retracta un hecho de memoria
+         * @description Solo actores docentes. `confirm` exige ≥1 evidencia (INV-03).
+         */
         post: operations["transitionMemoryFact"];
         delete?: never;
         options?: never;
@@ -442,7 +494,10 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** @description «Por qué recordé esto» (FR-MEM-05). */
+        /**
+         * Obtiene un manifiesto de contexto
+         * @description «Por qué recordé esto» (FR-MEM-05).
+         */
         get: operations["getContextManifest"];
         put?: never;
         post?: never;
@@ -459,6 +514,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Lista aprendizajes curriculares */
         get: operations["listLearningOutcomes"];
         put?: never;
         post?: never;
@@ -475,6 +531,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Lista reglas curriculares */
         get: operations["listCurriculumRules"];
         put?: never;
         post?: never;
@@ -493,6 +550,7 @@ export interface paths {
             };
             cookie?: never;
         };
+        /** Obtiene una tarea */
         get: operations["getTask"];
         put?: never;
         post?: never;
@@ -513,6 +571,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Cancela una tarea */
         post: operations["cancelTask"];
         delete?: never;
         options?: never;
@@ -531,7 +590,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Gate humano de acciones sensibles (FR-AGX-03). Etapa 3. */
+        /**
+         * Resuelve una compuerta de aprobación
+         * @description Gate humano de acciones sensibles (FR-AGX-03). Etapa 3.
+         */
         post: operations["resolveApprovalGate"];
         delete?: never;
         options?: never;
@@ -714,7 +776,7 @@ export interface components {
         "problem-details.schema": {
             /**
              * Format: uri-reference
-             * @description URI estable del tipo de problema; el sufijo es uno de los listados en enum de `code`.
+             * @description URI estable del tipo de problema: `https://<host>/problems/<code>`; el sufijo estable es el `code` listado en el enum. El host example.invalid es marcador de lugar (OD-01).
              */
             type: string;
             title: string;
@@ -1075,7 +1137,7 @@ export interface components {
                 params: Record<string, never>;
             };
             human_explanation: string;
-            exceptions?: string[];
+            exceptions: string[];
             /** @enum {string} */
             validation_status: "unvalidated" | "expert_validated";
             /** Format: date */
@@ -1105,7 +1167,15 @@ export interface components {
         IfMatch: string;
         /** @description Clave aleatoria ≥ 128 bits; TTL provisional 24 h (05 §7). */
         IdempotencyKey: string;
+        /** @description Tamaño de página; máximo 100 (05 §8). Valores fuera de rango → 422 `validation-failed`. */
         Limit: number;
+        /**
+         * @description Cursor opaco de la página anterior. El orden estable de toda colección paginada es
+         *     `(created_at, id)`; el cursor fija la instantánea de inserciones posteriores para que
+         *     una inserción no produzca duplicados ni omita elementos al continuar. Codifica el
+         *     último elemento y el límite de secuencia de la instantánea; no es un offset.
+         *     Parámetros de consulta no declarados por el recurso → 422 `validation-failed`.
+         */
         Cursor: string;
     };
     requestBodies: never;
@@ -1114,6 +1184,10 @@ export interface components {
         ETag: string;
         /** @description Segundos hasta poder reintentar. */
         RetryAfter: number;
+        /** @description Cabecera reservada; se emite solo en recursos deprecados (ninguno en v1). Ver CHANGELOG.md (05 §9). */
+        Deprecation: string;
+        /** @description Cabecera reservada; se emite junto a Deprecation. Fecha HTTP de retirada; ver CHANGELOG.md (05 §9). */
+        Sunset: string;
     };
     pathItems: never;
 }
@@ -1122,7 +1196,15 @@ export interface operations {
     listGroups: {
         parameters: {
             query?: {
+                /** @description Tamaño de página; máximo 100 (05 §8). Valores fuera de rango → 422 `validation-failed`. */
                 limit?: components["parameters"]["Limit"];
+                /**
+                 * @description Cursor opaco de la página anterior. El orden estable de toda colección paginada es
+                 *     `(created_at, id)`; el cursor fija la instantánea de inserciones posteriores para que
+                 *     una inserción no produzca duplicados ni omita elementos al continuar. Codifica el
+                 *     último elemento y el límite de secuencia de la instantánea; no es un offset.
+                 *     Parámetros de consulta no declarados por el recurso → 422 `validation-failed`.
+                 */
                 cursor?: components["parameters"]["Cursor"];
                 period?: string;
             };
@@ -1176,7 +1258,15 @@ export interface operations {
     listPlans: {
         parameters: {
             query?: {
+                /** @description Tamaño de página; máximo 100 (05 §8). Valores fuera de rango → 422 `validation-failed`. */
                 limit?: components["parameters"]["Limit"];
+                /**
+                 * @description Cursor opaco de la página anterior. El orden estable de toda colección paginada es
+                 *     `(created_at, id)`; el cursor fija la instantánea de inserciones posteriores para que
+                 *     una inserción no produzca duplicados ni omita elementos al continuar. Codifica el
+                 *     último elemento y el límite de secuencia de la instantánea; no es un offset.
+                 *     Parámetros de consulta no declarados por el recurso → 422 `validation-failed`.
+                 */
                 cursor?: components["parameters"]["Cursor"];
                 state?: components["schemas"]["PlanState"];
                 group_id?: string;
@@ -1371,7 +1461,15 @@ export interface operations {
     listSectionVersions: {
         parameters: {
             query?: {
+                /** @description Tamaño de página; máximo 100 (05 §8). Valores fuera de rango → 422 `validation-failed`. */
                 limit?: components["parameters"]["Limit"];
+                /**
+                 * @description Cursor opaco de la página anterior. El orden estable de toda colección paginada es
+                 *     `(created_at, id)`; el cursor fija la instantánea de inserciones posteriores para que
+                 *     una inserción no produzca duplicados ni omita elementos al continuar. Codifica el
+                 *     último elemento y el límite de secuencia de la instantánea; no es un offset.
+                 *     Parámetros de consulta no declarados por el recurso → 422 `validation-failed`.
+                 */
                 cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
@@ -1818,7 +1916,15 @@ export interface operations {
     listDecisionEvents: {
         parameters: {
             query?: {
+                /** @description Tamaño de página; máximo 100 (05 §8). Valores fuera de rango → 422 `validation-failed`. */
                 limit?: components["parameters"]["Limit"];
+                /**
+                 * @description Cursor opaco de la página anterior. El orden estable de toda colección paginada es
+                 *     `(created_at, id)`; el cursor fija la instantánea de inserciones posteriores para que
+                 *     una inserción no produzca duplicados ni omita elementos al continuar. Codifica el
+                 *     último elemento y el límite de secuencia de la instantánea; no es un offset.
+                 *     Parámetros de consulta no declarados por el recurso → 422 `validation-failed`.
+                 */
                 cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
@@ -1913,7 +2019,15 @@ export interface operations {
         parameters: {
             query?: {
                 status?: components["schemas"]["status"];
+                /** @description Tamaño de página; máximo 100 (05 §8). Valores fuera de rango → 422 `validation-failed`. */
                 limit?: components["parameters"]["Limit"];
+                /**
+                 * @description Cursor opaco de la página anterior. El orden estable de toda colección paginada es
+                 *     `(created_at, id)`; el cursor fija la instantánea de inserciones posteriores para que
+                 *     una inserción no produzca duplicados ni omita elementos al continuar. Codifica el
+                 *     último elemento y el límite de secuencia de la instantánea; no es un offset.
+                 *     Parámetros de consulta no declarados por el recurso → 422 `validation-failed`.
+                 */
                 cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
@@ -2083,7 +2197,15 @@ export interface operations {
                 curriculum_version_id: string;
                 subject?: components["schemas"]["Subject"];
                 level?: string;
+                /** @description Tamaño de página; máximo 100 (05 §8). Valores fuera de rango → 422 `validation-failed`. */
                 limit?: components["parameters"]["Limit"];
+                /**
+                 * @description Cursor opaco de la página anterior. El orden estable de toda colección paginada es
+                 *     `(created_at, id)`; el cursor fija la instantánea de inserciones posteriores para que
+                 *     una inserción no produzca duplicados ni omita elementos al continuar. Codifica el
+                 *     último elemento y el límite de secuencia de la instantánea; no es un offset.
+                 *     Parámetros de consulta no declarados por el recurso → 422 `validation-failed`.
+                 */
                 cursor?: components["parameters"]["Cursor"];
             };
             header?: never;
