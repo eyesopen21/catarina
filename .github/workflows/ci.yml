@@ -81,3 +81,83 @@ jobs:
       - run: terraform fmt -check -recursive infra/cloudflare
       - run: terraform -chdir=infra/cloudflare init -backend=false -input=false
       - run: terraform -chdir=infra/cloudflare validate
+
+  contracts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      BASE_REF: origin/main
+    steps:
+      # Full history is required by packages/contracts check:compatibility,
+      # which diffs docs/contracts/openapi.yaml against BASE_REF.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # PENDING (human decision): @asyncapi/cli 6.2.2 declares engines.node >=24
+      # while this workflow pins Node 22. `asyncapi validate` is deliberately NOT
+      # invoked here: the AsyncAPI CLI rejects the telemetry opt-out, and neither
+      # Node nor the CLI version may be changed to work around that. AsyncAPI
+      # validation stays PENDING pending human authorization.
+      - name: Lint OpenAPI with Redocly (AsyncAPI validate excluded)
+        run: pnpm --filter @catarina/contracts exec redocly lint --extends=minimal ../../docs/contracts/openapi.yaml
+      - name: Generate contract types
+        run: pnpm --filter @catarina/contracts run types:generate
+      - name: Contract tests
+        run: pnpm --filter @catarina/contracts run test:contract
+      - name: Mock tests
+        run: pnpm --filter @catarina/contracts run test:mock
+      - name: Compatibility tests
+        run: pnpm --filter @catarina/contracts run test:compatibility
+      - name: Assert comparator fails on major, not configuration error
+        run: node .ci/check-compatibility-major.mjs
+      - name: Check OpenAPI compatibility against BASE_REF
+        run: pnpm --filter @catarina/contracts run check:compatibility
+
+  harness:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # Consumed by tests/support/postgres.mjs in ci-service mode; no credential
+      # is stored in the repository (POSTGRES_HOST_AUTH_METHOD=trust, test only).
+      CATARINA_TEST_PG_URL: postgresql://postgres@localhost:5432/postgres
+    services:
+      postgres:
+        image: postgres:17.5-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Node test suite against real PostgreSQL 17
+        run: node --test "tests/**/*.test.mjs"
+      - name: Secret scanner
+        run: node tests/security/secret-scan.mjs
+      - name: PII scanner
+        run: node tests/security/pii-scan.mjs
