@@ -27,6 +27,9 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
     devDependencies:
+      '@types/node':
+        specifier: 22.20.5
+        version: 22.20.5
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -79,6 +82,9 @@ packages:
 
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
+
+  '@types/node@22.20.5':
+    resolution: {integrity: sha512-U2+DNr+wSjpsTS/wZGYHq7GcwfuSmKiKvoPvK22zwTlRhU91yOniN4qRR5KhIjvif7ysw/dz/hKmfDH0Ris4aA==}
 
   acorn-jsx-walk@2.0.0:
     resolution: {integrity: sha512-uuo6iJj4D4ygkdzd6jPtcxs8vZgDX9YFIkqczGImoypX2fQ4dVImmu3UzA4ynixCIMTrEOWW+95M2HuBaCEOVA==}
@@ -312,6 +318,9 @@ packages:
     resolution: {integrity: sha512-8iAasVS4wUx0gPLjH8Xtz2PeDzTSiy8QiLGu2DT3X5GU+egFEQhpnbtkehbAwjvDcxIERmCYcysiODFmE3Ud0Q==}
     engines: {node: '>=18'}
 
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
   watskeburt@6.0.0:
     resolution: {integrity: sha512-jfiuDABaxSkC71T6oZ3vCS99roYkSHm/+As+G0Dz8taAHQb+SJBvLEm5RlsgG71XdfAj3rv7eudUBTgwcQUPlQ==}
     engines: {node: ^22.13||^24||>=26}
@@ -354,6 +363,10 @@ snapshots:
       - supports-color
 
   '@tokenizer/token@0.3.0': {}
+
+  '@types/node@22.20.5':
+    dependencies:
+      undici-types: 6.21.0
 
   acorn-jsx-walk@2.0.0: {}
 
@@ -558,5 +571,7 @@ snapshots:
       '@lukeed/csprng': 1.1.0
 
   uint8array-extras@1.6.0: {}
+
+  undici-types@6.21.0: {}
 
   watskeburt@6.0.0: {}
