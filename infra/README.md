@@ -32,12 +32,20 @@ que aún no está elegido. El servicio Workers usa TLS de Cloudflare al recibir 
 
 ## Ejecución y gates
 
+El workflow ejecuta `terraform init -backend=false` y `terraform validate`: la validación
+del esquema no requiere token, valores de variables ni bundles y no llama a la API de
+Cloudflare. No ejecuta `plan`/`apply`, no escanea TLS, ni prueba cifrado en reposo; por tanto,
+no constituye evidencia para `TC-NFR-SEC-01`.
+
 Terraform requiere `cloudflare_account_id`, bundles construidos para `dev`/`staging` y
-orígenes PostgreSQL independientes. `cloudflare_api_token` se lee desde
+orígenes PostgreSQL independientes para planificar/aplicar. `cloudflare_api_token` se lee desde
 `TF_VAR_cloudflare_api_token` o un almacén de secretos de CI. No guardar secretos en archivos
 tfvars ni copiar el estado o plan al repositorio. El estado contiene el password sensible de
 Hyperdrive; antes de `apply` se debe configurar backend remoto cifrado y acceso restringido.
-Esta rama no ejecutó Terraform ni se desplegaron recursos.
+`versions.tf` fija el provider Cloudflare en `5.19.1`. El `terraform init` del workflow crea
+un lockfile efímero en su runner; no se pudo generar un `.terraform.lock.hcl` revisable aquí
+porque Terraform CLI no está instalado. No se inventaron hashes de provider. Esta rama no
+ejecutó Terraform ni desplegó recursos.
 
 El plan Cloudflare gratuito incluye Workers y Hyperdrive con cuota de Hyperdrive de 100 000
 sentencias/día; al exceder la cuota, las operaciones fallan. Eso no cubre el costo o las
@@ -62,3 +70,4 @@ y el escáner de PII. Esta rama no inventa comandos ni presenta esos controles c
 - [Cloudflare Workers: Rust/Wasm](https://developers.cloudflare.com/workers/languages/rust/)
 - [Cloudflare R2: cifrado de datos](https://developers.cloudflare.com/r2/reference/data-security/)
 - [Cloudflare Hyperdrive: precios](https://developers.cloudflare.com/hyperdrive/platform/pricing/)
+- [Esquema oficial del provider Cloudflare 5.19.1 para Workers Script](https://github.com/cloudflare/terraform-provider-cloudflare/blob/v5.19.1/docs/resources/workers_script.md)
