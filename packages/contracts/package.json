@@ -7,11 +7,12 @@
   "scripts": {
     "lint": "redocly lint --extends minimal ../../docs/contracts/openapi.yaml && asyncapi validate ../../docs/contracts/asyncapi.yaml",
     "types:generate": "openapi-typescript ../../docs/contracts/openapi.yaml -o src/generated/openapi.d.ts",
+    "test:types": "node --test test/types-drift.test.mjs",
     "test:contract": "node --test test/contract.test.mjs",
     "test:compatibility": "node --test test/compatibility-diff.test.mjs",
     "mock": "node src/mock-server.mjs",
     "test:mock": "node --test test/mock-pagination.test.mjs",
-    "check": "pnpm lint && pnpm types:generate && pnpm test:contract && pnpm test:mock && pnpm test:compatibility && pnpm check:compatibility",
+    "check": "pnpm lint && pnpm types:generate && pnpm test:types && pnpm test:contract && pnpm test:mock && pnpm test:compatibility && pnpm check:compatibility",
     "check:compatibility": "node scripts/check-compatibility.mjs"
   },
   "devDependencies": {

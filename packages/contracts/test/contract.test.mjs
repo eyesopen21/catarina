@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -75,6 +76,23 @@ test("pagination contract declares a 100 item ceiling and cursor page shape", ()
   const limit = openapi.components.parameters.Limit;
   assert.equal(limit.schema.maximum, 100);
   assert.equal(limit.schema.default, 25);
+  const cursor = openapi.components.parameters.Cursor;
+  assert.match(cursor.description, /\(created_at, id\)/, "stable ordering must be declared (05 §8)");
+  assert.match(cursor.description, /inserciones/, "cursor stability across insertions must be declared");
+  assert.match(cursor.description, /422/, "undeclared query parameters must be declared as rejected");
+
+  let pagedOperations = 0;
+  for (const pathItem of Object.values(openapi.paths)) {
+    for (const operation of Object.values(pathItem)) {
+      if (!operation || typeof operation !== "object" || !Array.isArray(operation.parameters)) continue;
+      const refs = operation.parameters.map((parameter) => parameter.$ref);
+      if (refs.includes("#/components/parameters/Limit")) {
+        assert.ok(refs.includes("#/components/parameters/Cursor"), `${operation.operationId} must pair Limit with Cursor`);
+        pagedOperations++;
+      }
+    }
+  }
+  assert.ok(pagedOperations > 0, "at least one operation must expose the cursor");
   const pagedSchemas = Object.values(openapi.components.schemas).filter((schema) =>
     schema.type === "object" && schema.properties?.items && schema.properties?.next_cursor
   );
@@ -82,4 +100,66 @@ test("pagination contract declares a 100 item ceiling and cursor page shape", ()
   for (const schema of pagedSchemas) {
     assert.equal(schema.properties.next_cursor.type.includes("null"), true);
   }
+});
+
+test("FR-CUR-02 curriculum rules require the class and exceptions", () => {
+  const ruleAjv = new Ajv2020({ allErrors: true, strict: false });
+  addFormats(ruleAjv);
+  const schema = JSON.parse(readFileSync(path.join(contractsRoot, "schemas/curriculum-rule.schema.json"), "utf8"));
+  const validate = ruleAjv.compile(schema);
+  const rule = {
+    id: "40000000-0000-4000-8000-000000000001",
+    curriculum_version_id: "20000000-0000-4000-8000-000000000001",
+    source_id: "50000000-0000-4000-8000-000000000001",
+    source_version: "2026-I",
+    source_section: "Anexo 3",
+    effective_from: "2026-01-01",
+    education_level: "I_ciclo",
+    modality: "presencial",
+    subject: "matematica",
+    rule_type: "structure",
+    rule_class: "required_by_MEP",
+    severity: "error",
+    validator: { validator_id: "structure.sections", params: {} },
+    human_explanation: "Regla sintética de ejemplo",
+    exceptions: [],
+    validation_status: "unvalidated"
+  };
+  assert.equal(validate(rule), true, JSON.stringify(validate.errors));
+  for (const missing of ["exceptions", "rule_class", "human_explanation"]) {
+    const incomplete = { ...rule };
+    delete incomplete[missing];
+    assert.equal(validate(incomplete), false, `${missing} must be required (FR-CUR-02)`);
+    assert.ok(validate.errors.some((error) => error.keyword === "required" && error.params.missingProperty === missing));
+  }
+});
+
+test("error type URIs are stable by code and deprecation policy is documented", async () => {
+  assert.match(problemSchema["x-type-uri-template"], /\/\{code\}$/, "type URI must be derived from a stable code");
+  assert.equal(problemSchema.properties.code.enum.length, new Set(problemSchema.properties.code.enum).size);
+  assert.ok(openapi.components.headers.Deprecation && openapi.components.headers.Sunset);
+  const changelog = await readFile(path.join(contractsRoot, "CHANGELOG.md"), "utf8");
+  assert.match(changelog, /Deprecation/);
+  assert.match(changelog, /Sunset/);
+  assert.match(changelog, /seis meses|6 meses/, "deprecation notice must state the (>= six months, provisional) window");
+  assert.match(changelog, /Proposed/, "contracts must remain Proposed until the human gate");
+});
+
+test("published Problem examples validate against the problem schema", () => {
+  const examples = openapi.components.responses.Problem.content["application/problem+json"].examples;
+  assert.ok(examples && Object.keys(examples).length >= 3, "Problem response must publish concrete examples");
+  let validated = 0;
+  for (const example of Object.values(examples)) {
+    const body = example.value;
+    assert.equal(validateProblem(body), true, `${example.summary}: ${JSON.stringify(validateProblem.errors)}`);
+    assert.equal(body.type, `https://api.example.invalid/problems/${body.code}`, "type suffix must be the stable code");
+    validated++;
+  }
+  assert.equal(validated, Object.keys(examples).length);
+  assert.equal(validateProblem({
+    type: "not-a-stable-uri",
+    title: "Solicitud no válida",
+    status: 422,
+    code: "validation-failed"
+  }), false, "an unstable type URI must be rejected by the schema");
 });
