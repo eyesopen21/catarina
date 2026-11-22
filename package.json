@@ -9,5 +9,10 @@
   },
   "devDependencies": {
     "dependency-cruiser": "18.9.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "simple-git": "4.0.2"
+    }
   }
 }
