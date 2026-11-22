@@ -56,19 +56,22 @@ export function keepDistinctOccurrences(matches) {
 
 // Iterates EVERY occurrence of every global pattern. The previous implementation
 // used pattern.exec() once per detector, hiding all matches after the first.
-export function collectMatches(text, detectors, isCandidate = () => true) {
+// `context` gives rules the surrounding text, the current line and the file
+// path so they can apply narrow, documented structural exceptions (UUID
+// fragments, generated lockfile metadata) without excluding files.
+export function collectMatches(text, detectors, isCandidate = () => true, filePath = '') {
   const matches = [];
   for (const { id, pattern } of detectors) {
     for (const found of text.matchAll(pattern)) {
-      if (!isDelimited(text, found.index, found[0].length)) continue;
-      if (!isCandidate(id, found[0], found)) continue;
-      matches.push({
-        kind: id,
-        pattern: pattern.source,
-        value: found[0],
-        start: found.index,
-        end: found.index + found[0].length,
-      });
+      const start = found.index;
+      const end = start + found[0].length;
+      if (!isDelimited(text, start, found[0].length)) continue;
+      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+      const nextBreak = text.indexOf('\n', end);
+      const lineEnd = nextBreak === -1 ? text.length : nextBreak;
+      const context = { text, start, end, line: text.slice(lineStart, lineEnd), filePath };
+      if (!isCandidate(id, found[0], found, context)) continue;
+      matches.push({ kind: id, pattern: pattern.source, value: found[0], start, end });
     }
   }
   return keepDistinctOccurrences(matches).map(({ kind, pattern, value }) => ({ kind, pattern, value }));
