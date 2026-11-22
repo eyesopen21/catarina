@@ -5,6 +5,8 @@ import { findPii, scanPaths } from './pii-scan.mjs';
 // Canaries are assembled at runtime: no literal PII shape may live in the repo.
 const phone = (a, b, separator = '-') => [a, b].join(separator);
 const nationalId = (a, b, c) => [a, b, c].join('-');
+// Every 8-digit segment is split so no phone-shaped literal exists in source.
+const opaqueUuid = () => [['2000', '0000'].join(''), '0000', '4000', '8000', '000000000001'].join('-');
 
 test('scanner detects contact and national identifier canaries built in memory', () => {
   const syntheticEmail = ['alumna', 'canary.invalid'].join('@');
@@ -89,4 +91,29 @@ test('E.164/+506 numbers remain detected', () => {
   const findings = findPii(['Llamar al', ['+506', phone('8888', '1111', ' ')].join(' ')].join(' '));
   assert.equal(findings.length, 1);
   assert.equal(findings[0].value, ['+506', phone('8888', '1111', ' ')].join(' '));
+});
+
+test('REGRESSION: an 8-digit segment inside a UUID is not a phone', () => {
+  const uuid = opaqueUuid();
+  const text = `curriculum_version_id: "${uuid}"`;
+  assert.deepEqual(findPii(text), []);
+});
+
+test('REGRESSION: a phone next to a UUID is still detected', () => {
+  const uuid = opaqueUuid();
+  const nearby = phone('8888', '1111', ' ');
+  const findings = findPii([uuid, nearby].join(' '));
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].value, nearby);
+});
+
+test('REGRESSION: lockfile deprecated metadata email is ignored, nothing else is', () => {
+  const email = ['i@', 'izs.me'].join('');
+  const deprecated = `    deprecated: Support may be purchased by contacting ${email}`;
+  assert.deepEqual(findPii(deprecated, 'pnpm-lock.yaml'), []);
+
+  // Negative controls: the same address on another line of the same lockfile,
+  // and on a deprecated line of a non-lockfile, MUST still be reported.
+  assert.equal(findPii(`    resolved: ${email}`, 'pnpm-lock.yaml').length, 1);
+  assert.equal(findPii(deprecated, 'README.md').length, 1);
 });

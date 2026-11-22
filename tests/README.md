@@ -77,12 +77,17 @@ jobs:
       - run: node tests/security/gitleaks-history.mjs
 ```
 
-The PII detector's only token anchor is the Unicode-aware `\p{L}\p{N}`
-adjacency check in `scan-util.mjs`: digit runs embedded in hashes, nanosecond
-timestamps or decimals are rejected, while a standalone 8-digit phone
-delimited by spaces/punctuation is still detected. The only semantic exclusion
-is the date guard inherited from the base detector. Numeric ranges `2/6/7/8`
-and `+506` remain unchanged.
+PII anchoring: the Unicode-aware `\p{L}\p{N}` adjacency check in `scan-util.mjs`
+rejects digit runs embedded in hashes, nanosecond timestamps or decimals,
+while a standalone 8-digit phone delimited by spaces/punctuation is still
+detected. Two narrow structural rules are also applied: candidates fully
+contained in a canonical 8-4-4-4-12 hex UUID are opaque identifiers, not PII;
+and emails on a `deprecated:` metadata line of a recognized lockfile are
+upstream package-maintainer contact data. The lockfile rule does **not**
+exclude the file: every other line of it, and every other file, is scanned,
+and regression tests assert the same address on a different line or in a
+different file is still reported. The date guard from the base detector is
+retained. Numeric ranges `2/6/7/8` and `+506` remain unchanged.
 
 `gitleaks` covers the full history (docs/09 §8); the in-repo secret scanner
 covers the working tree, fixtures and synthetic log samples. Checkout with
