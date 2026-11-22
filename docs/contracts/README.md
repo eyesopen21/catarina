@@ -1,6 +1,6 @@
 # Contratos
 
-**Versión:** 0.1-draft · **Estado:** Proposed (no implementados) · **Fuente:** [05](../05-Technical-Specifications.md), [ADR-021](../adr/ADR-021-estilo-api.md)
+**Versión OpenAPI:** 1.0.0 propuesta · **Estado:** Proposed; no congelado y aún sin implementación de backend · **Fuente:** [05](../05-Technical-Specifications.md), [ADR-021](../adr/ADR-021-estilo-api.md)
 
 | Contrato | Formato | Contenido | Requisitos |
 |---|---|---|---|
@@ -17,3 +17,5 @@
 | [interfaces.md](interfaces.md) | TypeScript ilustrativo | Puertos `LLMProvider`, `MemoryRetrieval`, `ToolRegistry`, `AgentRuntime`, `TaskStore`, `DocumentRenderer`, `AuthorizationPort`, `DecisionLog`, `KeyService` | EIR-01, EIR-03 |
 
 **Reglas comunes:** sin PII de menores en ningún ejemplo ni payload; `additionalProperties: false` en entradas; dominios `example.invalid` como marcadores de lugar hasta definir el dominio real (OD-01). La verificación de contratos en CI (linters de OpenAPI y AsyncAPI, validación de JSON Schema y pruebas de contrato) forma parte de la estrategia de pruebas ([10 §2](../10-Test-Strategy.md)) cuando exista implementación.
+
+El paquete de contratos en [`packages/contracts`](../../packages/contracts/package.json) proporciona lint de OpenAPI/AsyncAPI, tipos TypeScript generados, validación de errores RFC 9457 y un mock local con datos sintéticos. El mock demuestra únicamente la semántica de paginación de su fixture; no acredita comportamiento del backend. `pnpm --filter @catarina/contracts check:compatibility` compara contra `BASE_REF` (por defecto `origin/main`) y falla ante cambios incompatibles según las reglas de Redocly. El gate humano H-TL conserva la decisión de congelar contratos (13 §5.1).
