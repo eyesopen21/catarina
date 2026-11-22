@@ -26,10 +26,12 @@ export async function* walkTextFiles(directory) {
   }
 }
 
-// Rejects a match that is embedded in a longer alphanumeric token. This is the
-// fix for the false positive where an 8-digit run inside a hex hash was read as
-// a phone number. It does not narrow the numeric ranges of any detector.
-const TOKEN_CHAR = /[A-Za-z0-9]/;
+// Rejects a match embedded in a longer alphanumeric/identifier token. Unicode
+// properties cover letters and digits in any script (not only ASCII hex), and
+// '_' covers identifiers. This is what prevents a digit run inside a SHA-256,
+// a nanosecond timestamp or a decimal from being read as a phone number. It
+// does not narrow the numeric ranges of any detector.
+const TOKEN_CHAR = /[\p{L}\p{N}_]/u;
 
 export function isDelimited(text, start, length) {
   const before = text[start - 1];
