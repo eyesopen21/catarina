@@ -66,3 +66,18 @@ jobs:
       - uses: github/codeql-action/analyze@v3
         with:
           category: "/language:javascript-typescript"
+
+  infrastructure:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.4
+      - run: terraform fmt -check -recursive infra/cloudflare
+      - run: terraform -chdir=infra/cloudflare init -backend=false -input=false
+      - run: terraform -chdir=infra/cloudflare validate
