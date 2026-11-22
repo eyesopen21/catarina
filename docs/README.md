@@ -1,54 +1,97 @@
-# Engineering Baseline — Plataforma Docente Costa Rica
+# Documentación de ingeniería
 
-**Versión:** 0.2-draft · **Estado:** Draft — propuesta de ingeniería, **no aprobada** · **Fecha:** 2026-11-22
-**Base:** suite documental v0.4 (`../idea/`) · **Naturaleza:** especificación y arquitectura; **no hay implementación**.
+> Línea base para implementar, validar y evolucionar la plataforma. Derivada de la suite v0.4 en [`../idea/`](../idea/00_COMENZAR_AQUI.md).
 
-> **North Star:** un *Teacher-Centric Pedagogical Operating Platform* con arquitectura dirigida por dominio, memoria pedagógica persistente, flujos agénticos gobernados por humanos e infraestructura de IA independiente del proveedor. La IA aumenta la productividad y la creatividad del docente; el sistema garantiza la integridad del conocimiento pedagógico, la trazabilidad de decisiones y la seguridad de los datos.
+`v0.2-draft` · `Proposed` · `2026-11-22` · sin implementación
 
-## 1. Cómo leer este repositorio
+**North Star.** Una plataforma pedagógica centrada en el docente: arquitectura guiada por el dominio, memoria pedagógica persistente, agentes gobernados por humanos e IA independiente del proveedor. La IA amplía la productividad y la creatividad del docente; el sistema protege la integridad del conocimiento pedagógico, la trazabilidad de las decisiones y los datos de los estudiantes.
 
-| Orden | Documento | Para quién | Contenido |
-|---|---|---|---|
-| 1 | [01-PRD](01-PRD.md) | Producto, UX | Visión, personas, JTBD, journeys, alcance MVP |
-| 2 | [03-Domain-Model-Pedagogy](03-Domain-Model-Pedagogy.md) | Todos | Lenguaje ubicuo, coautoría, reglas pedagógicas, invariantes |
-| 3 | [02-SRS](02-SRS.md) | Ingeniería, QA | Requisitos (FR/NFR/BR/INV/SEC/DAT/EIR) verificables |
-| 4 | [04-Software-Architecture](04-Software-Architecture.md) | Arquitectura | C4, bounded contexts, despliegue, trust boundaries |
-| 5 | [05-Technical-Specifications](05-Technical-Specifications.md) | Backend/API | Trade-offs tecnológicos, API, errores, concurrencia HTTP |
-| 6 | [06-Data-Architecture](06-Data-Architecture.md) | Datos | ERD, diccionario, grafo, ciclo de vida, bóveda |
-| 7 | [07-AI-Agentic-Architecture](07-AI-Agentic-Architecture.md) | IA | Supervisor–worker, contexto, gateway, DLP, sandbox |
-| 8 | [08-Concurrency-Consistency](08-Concurrency-Consistency.md) | Backend/QA | Carreras, mitigaciones y pruebas reproducibles |
-| 9 | [09-Security-Privacy](09-Security-Privacy.md) | Seguridad, legal | STRIDE, amenazas, DPIA preliminar, cumplimiento pendiente |
-| 10 | [10-Test-Strategy](10-Test-Strategy.md) | QA, docentes expertos | Estrategia, evaluación de IA y calidad pedagógica |
-| 11 | [11-Roadmap-MVP](11-Roadmap-MVP.md) | Gestión | MVP técnico, épicas, secuencia, CI/CD, costos |
-| 12 | [12-Open-Decisions](12-Open-Decisions.md) | Propietario | Decisiones pendientes (no resueltas arbitrariamente) |
-| 13 | [13-WBS-Agentes](13-WBS-Agentes.md) | Gestión, integrador | WBS orientado a agentes, fases con carriles paralelos y gates humanos |
+---
 
-Complementos: [adr/](adr/README.md) (23 ADR, todos *Proposed*) · [diagrams/](diagrams/README.md) (Mermaid) · [contracts/](contracts/README.md) (OpenAPI 3.1, AsyncAPI, JSON Schema, MCP) · [traceability/requirements-matrix.csv](traceability/requirements-matrix.csv) (RTM).
+## Documentos
 
-## 2. Principios de este baseline
+### Producto y dominio
 
-1. **Autoridad de la suite v0.4.** Si algo aquí contradice a `idea/`, prevalece `idea/` y se registra como discrepancia en [12-Open-Decisions](12-Open-Decisions.md).
-2. **Nada se declara aprobado sin el propietario.** ADR en `Proposed`; requisitos en `Proposed`; cifras sin evidencia marcadas como *provisional engineering target*.
-3. **El dominio pedagógico manda; la IA es una capa de soporte.** Las decisiones docentes aprobadas son invariantes (INV-01) hasta un `reopen` explícito.
-4. **Sin afirmaciones legales ni educativas fabricadas.** Todo lo normativo queda *pendiente de validación legal/experta* (ver 09 §15).
-5. **Sin PII de menores** en ejemplos, logs ni fixtures; solo datos sintéticos.
-6. **Sin sobreingeniería.** Monolito modular, PostgreSQL, sin microservicios/Kubernetes/event sourcing/microVM en el MVP (ver ADR-001, ADR-008, ADR-011).
+| | Documento | Qué contiene |
+|---|---|---|
+| 01 | [PRD](01-PRD.md) | Visión, personas, jornadas, flujo de coautoría, alcance del MVP |
+| 02 | [SRS](02-SRS.md) | 120 requisitos verificables: funcionales, no funcionales, reglas, invariantes, datos, seguridad |
+| 03 | [Modelo de dominio pedagógico](03-Domain-Model-Pedagogy.md) | Lenguaje común, estados, anexos, indicadores, reglas MEP, memoria |
 
-## 3. Convenciones
+### Arquitectura
 
-**IDs estables.** `FR-<ÁREA>-nn`, `NFR-<ATRIBUTO>-nn`, `BR-nn`, `INV-nn`, `SPR-nn` (seguridad y privacidad), `DAT-nn`, `EIR-nn`; `ADR-nnn`; `CMP-<CTX>-<NOMBRE>` (componentes); `BC-<CTX>` (contextos); `TC-<ID de requisito>` (casos de prueba); `R-nn` (condiciones de carrera); `T-nn` (amenazas); `OD-nn` (decisiones abiertas); `G01–G10` (escenarios oro de la suite). **Need IDs** = IDs de la suite (`DOC-01`, `MEP-01`, …).
+| | Documento | Qué contiene |
+|---|---|---|
+| 04 | [Arquitectura (SAD)](04-Software-Architecture.md) | C4, contextos delimitados, componentes, despliegue, fronteras de confianza |
+| 05 | [Especificaciones técnicas](05-Technical-Specifications.md) | Trade-offs tecnológicos, convenciones de API, errores, concurrencia HTTP |
+| 06 | [Datos y grafo de conocimiento](06-Data-Architecture.md) | ERD, diccionario, aislamiento por tenant, bóveda de identidad, ciclo de vida |
+| 07 | [IA y agentes](07-AI-Agentic-Architecture.md) | Supervisor–worker, ensamblaje de contexto, gateway, DLP, degradación |
+| 08 | [Concurrencia y consistencia](08-Concurrency-Consistency.md) | Diez condiciones de carrera, cómo se evitan y cómo se prueban |
+| 09 | [Seguridad y privacidad](09-Security-Privacy.md) | STRIDE, amenazas, DPIA preliminar, cumplimiento pendiente |
 
-**Lenguaje normativo.** MUST / SHOULD / MAY (RFC 2119/8174): *MUST* = obligación; *SHOULD* = recomendación con excepción justificada; *MAY* = opcional. Un objetivo propuesto sin evidencia se rotula *provisional engineering target*.
+### Calidad y entrega
 
-**Códigos de fuente.** `S<NN>` = archivo `NN_*.md` de la suite v0.4 (p. ej. `S03` = `03_proceso_real_de_coelaboracion.md`; `S27` = requerimientos y trazabilidad). `ARCH` = derivado por el arquitecto para este baseline. `OWASP`, `NIST`, `ISO` = estándares citados.
+| | Documento | Qué contiene |
+|---|---|---|
+| 10 | [Estrategia de pruebas](10-Test-Strategy.md) | Niveles, invariantes pedagógicos, evaluación de IA y evaluación humana |
+| 11 | [Roadmap y MVP](11-Roadmap-MVP.md) | Épicas, secuencia, CI/CD, SLO, gates, piloto, costos |
+| 12 | [Decisiones abiertas](12-Open-Decisions.md) | Lo que el propietario debe decidir |
+| 13 | [WBS para agentes](13-WBS-Agentes.md) | Paquetes de trabajo, fases paralelas, gates humanos |
 
-**Terminología.** *Bloque* (suite) ≡ **`PlanSection`** (aquí). *Teacher-in-the-Loop (TITL)* y *Human-in-the-Loop (HITL)*: TITL es la participación del docente en la coautoría y la aprobación; HITL es el control humano (docente o rol autorizado) sobre acciones sensibles de agentes. Glosario completo: [03 §1](03-Domain-Model-Pedagogy.md).
+### Artefactos
 
-**Encabezado de cada documento.** Versión, estado, dependencias y decisiones pendientes.
+| Carpeta | Contenido |
+|---|---|
+| [`adr/`](adr/README.md) | 23 decisiones de arquitectura, todas `Proposed` |
+| [`contracts/`](contracts/README.md) | OpenAPI 3.1 · AsyncAPI 3.0 · JSON Schema 2020-12 · herramientas MCP · interfaces tipadas |
+| [`diagrams/`](diagrams/README.md) | 18 diagramas Mermaid editables |
+| [`traceability/`](traceability/requirements-matrix.csv) | Matriz necesidad → requisito → especificación → componente → ADR → prueba |
 
-## 4. Mapa de código de fuentes (suite → este baseline)
+**Orden de lectura sugerido:** 01 → 03 → 02 → 04 → los demás según tu rol.
 
-| Código | Archivo suite | Código | Archivo suite |
+---
+
+## Reglas de este baseline
+
+- **La suite manda.** Si algo aquí contradice a `idea/`, prevalece `idea/` y la discrepancia va a [decisiones abiertas](12-Open-Decisions.md).
+- **Nada está aprobado.** ADR y requisitos están en `Proposed`; las cifras sin evidencia son *provisional engineering targets*.
+- **El dominio pedagógico manda; la IA es soporte.** Lo aprobado por el docente es invariante (INV-01) hasta que él lo reabre.
+- **Sin afirmaciones legales ni educativas inventadas.** Todo lo normativo queda pendiente de validación ([09 §15](09-Security-Privacy.md)).
+- **Sin datos reales de estudiantes** en ejemplos, logs ni pruebas.
+- **Sin sobreingeniería.** Monolito modular y PostgreSQL; sin microservicios, Kubernetes, event sourcing ni microVMs en el MVP.
+
+## Convenciones
+
+**Lenguaje normativo** (RFC 2119/8174): **MUST** obligación · **SHOULD** recomendación con excepción justificada · **MAY** opcional.
+
+**Identificadores**
+
+| Prefijo | Qué identifica | Ejemplo |
+|---|---|---|
+| `FR-<ÁREA>-nn` | Requisito funcional | `FR-PLN-04` |
+| `NFR-<ATRIBUTO>-nn` | Requisito no funcional | `NFR-PERF-01` |
+| `BR-nn` · `INV-nn` | Regla de negocio · invariante de dominio | `INV-01` |
+| `SPR-nn` · `DAT-nn` · `EIR-nn` | Seguridad y privacidad · datos · interfaces externas | `SPR-04` |
+| `TC-<requisito>` | Caso de prueba del requisito | `TC-INV-01` |
+| `ADR-nnn` | Decisión de arquitectura | `ADR-004` |
+| `BC-<CTX>` · `CMP-<CTX>-<NOMBRE>` | Contexto delimitado · componente | `CMP-PLN-APPR` |
+| `R-nn` · `T-nn` · `OD-nn` | Condición de carrera · amenaza · decisión abierta | `R-04` |
+| `WP-nn` | Paquete de trabajo del WBS | `WP-21` |
+| `G01`–`G10` | Escenarios oro de la suite | `G01` |
+| `DOC-01`, `SEC-01`, … | Necesidades de origen (IDs de la suite) | `MEP-01` |
+
+**Términos.** *Bloque* en la suite ≡ `PlanSection` aquí. **TITL** (*Teacher-in-the-Loop*) = el docente coelabora y aprueba. **HITL** (*Human-in-the-Loop*) = un humano autoriza las acciones sensibles de los agentes. Glosario completo en [03 §1](03-Domain-Model-Pedagogy.md).
+
+Cada documento abre con versión, estado, dependencias y decisiones pendientes.
+
+## Fuentes de la suite (S01–S28)
+
+La columna *Source* de los requisitos usa `S<NN>` para el archivo `NN_*.md` de la suite y `ARCH` para lo derivado en este baseline.
+
+<details>
+<summary>Ver la tabla de códigos</summary>
+
+| Código | Archivo | Código | Archivo |
 |---|---|---|---|
 | S01 | `01_manifiesto_y_vision` | S15 | `15_MEP_guia_IA_circular_y_competencias_2026` |
 | S02 | `02_origen_contexto_y_procedencia` | S16 | `16_referentes_internacionales_Claude_y_plataformas` |
@@ -65,22 +108,22 @@ Complementos: [adr/](adr/README.md) (23 ADR, todos *Proposed*) · [diagrams/](di
 | S13 | `13_TEC_INNOVA_MatIA_aprendizajes` | S27 | `27_requerimientos_y_trazabilidad` |
 | S14 | `14_UCR_formacion_gobernanza_y_proyectos` | S28 | `28_riesgos_y_decisiones_abiertas` |
 
-*Nota:* el índice `00_COMENZAR_AQUI.md` de la suite lista nombres de archivo de una numeración anterior; los archivos reales son los de esta tabla (discrepancia registrada en OD-12).
+El índice `00_COMENZAR_AQUI.md` de la suite cita nombres de una numeración anterior; los archivos reales son los de esta tabla (OD-12).
 
-## 5. Mantenimiento de la consistencia
+</details>
 
-Toda la documentación se edita directamente en Markdown, Mermaid, YAML y JSON; no hay generadores. Al cambiar un requisito se actualizan, en el mismo cambio:
+## Mantener la consistencia
 
-1. su fila en [02-SRS](02-SRS.md) y, si cambia la cobertura, la tabla de necesidades (02 §1.5);
-2. sus filas en [traceability/requirements-matrix.csv](traceability/requirements-matrix.csv);
-3. el catálogo de [10 §9](10-Test-Strategy.md) si cambia el nivel de prueba;
+Todo se edita a mano en Markdown, Mermaid, YAML y JSON; no hay generadores. Al cambiar un requisito, actualizá en el mismo cambio:
+
+1. su fila en el [SRS](02-SRS.md) y, si cambia la cobertura, la tabla de necesidades (02 §1.5);
+2. sus filas en la [matriz de trazabilidad](traceability/requirements-matrix.csv);
+3. el catálogo de pruebas ([10 §9](10-Test-Strategy.md)) y el WBS ([13 §5](13-WBS-Agentes.md)) si cambia su nivel de prueba o su paquete;
 4. los ADR y contratos que lo citan.
 
-Cuando exista implementación, la CI verificará los contratos con linters estándar de OpenAPI/AsyncAPI y validadores de JSON Schema (10 §2).
+## Qué no es
 
-## 6. Estado global y lo que NO es este baseline
-
-- No es código, ni asesoría jurídica, ni certificación de cumplimiento MEP.
-- Las cifras de rendimiento, disponibilidad y capacidad son **objetivos de ingeniería provisionales**.
-- Las comparaciones tecnológicas son **análisis cualitativo basado en requisitos**, sin puntajes, sin benchmarks propios y sin verificación en línea de versiones o licencias en esta pasada (OD-10).
-- La suite v0.4 anota que sus casos recuperados no son transcripciones íntegras ni normativa; este baseline los usa solo como **diseño de pruebas** y los marca como pendientes de cotejo.
+- No es código, asesoría jurídica ni certificación de cumplimiento MEP.
+- Las cifras de rendimiento, disponibilidad y capacidad son objetivos provisionales.
+- Las comparaciones tecnológicas son cualitativas, basadas en requisitos; sin puntajes ni benchmarks propios. Versiones y licencias se verifican antes de aceptar cada ADR (OD-10).
+- Los casos recuperados de la suite se usan solo para diseñar pruebas, y siguen pendientes de cotejo con los originales.

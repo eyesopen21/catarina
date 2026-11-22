@@ -17,7 +17,7 @@ Especifica los requisitos verificables de la Plataforma Docente (Costa Rica, I y
 La columna *Priority* combina prioridad y etapa. `P0` = el núcleo o su seguridad debe resolverse **antes de exponerlo a usuarios reales** (S27); `P1` = necesario para el valor completo; `P2` = diferible. Etapas: `MVP` (Etapa 1), `F2`, `F3`, `F4` (Etapas 2–4 de S26).
 
 ### 1.4 Fuentes y columnas
-*Source* usa los códigos `S<NN>` de [README §4](README.md); `ARCH` = derivado por el arquitecto para este baseline. *Verification Method* sigue 29148: Test (con su nivel), Inspection, Analysis o Demonstration. Cada requisito `X` tiene el caso de prueba `TC-X` (ver [10 §9](10-Test-Strategy.md)) y filas en la [RTM](traceability/requirements-matrix.csv).
+*Source* usa los códigos `S<NN>` de la sección «Fuentes de la suite» del [README](README.md); `ARCH` = derivado por el arquitecto para este baseline. *Verification Method* sigue 29148: Test (con su nivel), Inspection, Analysis o Demonstration. Cada requisito `X` tiene el caso de prueba `TC-X` (ver [10 §9](10-Test-Strategy.md)) y filas en la [RTM](traceability/requirements-matrix.csv).
 
 **Nomenclatura:** las necesidades de la suite conservan sus IDs (`DOC-01`, `SEC-01`, …). Los requisitos de seguridad y privacidad de este SRS usan el prefijo **`SPR-`** para no confundirse con la necesidad `SEC-01`.
 
