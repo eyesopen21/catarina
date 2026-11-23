@@ -6,6 +6,8 @@
 
 El docente decide. La IA propone. Lo aprobado no se toca.
 
+**Sitio:** [https://catarina-mep.vercel.app](https://catarina-mep.vercel.app/#/home)
+
 ![estado](https://img.shields.io/badge/estado-especificación-blue)
 ![requisitos](https://img.shields.io/badge/requisitos-120-informational)
 ![ADR](https://img.shields.io/badge/ADR-23%20proposed-orange)
